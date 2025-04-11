@@ -10,7 +10,7 @@ import {
   Patch
 } from '@nestjs/common';
 import { UserService } from './user.service';
-import { UpdateUserDetailsDto } from './dto/user.dto';
+import { UpdateUserDetailsDto, ApplyForServiceProviderDto } from './dto/user.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Service, ProviderType } from '@prisma/client';
 
@@ -39,15 +39,9 @@ async signup(@Body('email') email: string) {
   }
 
   @Post('applyForServiceProvider')
-async createServiceProviderProfile(
-  @Body('userId') userId: string,
-  @Body('providerType') providerType: ProviderType,
-) {
+async createServiceProviderProfile(@Body() dto: ApplyForServiceProviderDto) {
   try {
-    const serviceProviderProfile = await this.userService.createServiceProviderProfile(
-      userId,
-      providerType,
-    );
+    const serviceProviderProfile = await this.userService.createServiceProviderProfile(dto);
 
     return {
       message: 'Service provider profile created successfully',

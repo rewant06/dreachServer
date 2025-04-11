@@ -7,7 +7,7 @@ import {
     BadRequestException,
   } from '@nestjs/common';
   
-  import { UpdateUserDetailsDto, UpdatePatientsDetailsDto} from './dto/user.dto';
+  import { UpdateUserDetailsDto, UpdatePatientsDetailsDto, ApplyForServiceProviderDto} from './dto/user.dto';
   import { PrismaService } from 'src/prisma.service';
   import {  Service, ProviderType } from '@prisma/client';
   
@@ -214,13 +214,13 @@ import {
     }
   
   
-    async createServiceProviderProfile(userId: string, providerType: ProviderType) {
+    async createServiceProviderProfile(dto: ApplyForServiceProviderDto) {
+      const { userId, providerType, specialization, fee, experience, description } = dto;
+    
       try {
         // Check if the user exists
         const user = await this.prisma.user.findUnique({
-          where: {
-            userId: userId, 
-          },
+          where: { userId },
         });
     
         if (!user) {
@@ -234,16 +234,15 @@ import {
         // Create the ServiceProvider profile
         const serviceProviderProfile = await this.prisma.serviceProvider.create({
           data: {
-            user: {
-              connect: {
-                id: user.id, 
-              },
-            },
+            user: { connect: { id: user.id } },
             name: user.name ?? '',
-            providerType: providerType, 
-            specialization: [], 
+            providerType,
+            specialization: specialization ?? [],
+            fee,
+            experience,
+            description,
             status: 'PENDING',
-            providerId: providerId, 
+            providerId,
             dob: user.dob?.toISOString() ?? '',
           },
         });
@@ -367,8 +366,8 @@ import {
       try {
         return await this.prisma.serviceProvider.findMany({
           where: {
-            status: 'APPROVED', // Filter for approved service providers
-            providerType: 'Doctor', // Ensure only doctors are retrieved
+            status: 'APPROVED', 
+            
           },
           select: {
             id: true,
@@ -376,6 +375,8 @@ import {
             status: true,
             name: true, // Use `name` instead of `Fname` and `Lname`
             providerType: true,
+            userId: true,
+            providerId: true,
             user: {
               select: {
                 email: true,
@@ -387,6 +388,7 @@ import {
             specialization: true, // Include specializations if needed
             fee: true, // Include fee if needed
             experience: true, // Include experience if needed
+            service: true
           },
         });
       } catch (error) {
@@ -433,13 +435,13 @@ import {
             id: true,
             specialization: true,
             fee: true,
-            service: true, // Include the services offered
+            service: true, 
             user: {
               select: {
                 name: true,
                 email: true,
                 phone: true,
-                address: true, // Access address from the User model
+                address: true, 
                 profilePic: true,
                 username: true,
               },

@@ -64,7 +64,11 @@ export class AdminService {
           id: true,
           createdAt: true,
           document: true,
-          providerType: true, // Include the applied providerType
+          providerType: true, 
+          specialization: true,
+          service: true,
+          userId: true,
+
           user: {
             select: {
               name: true,

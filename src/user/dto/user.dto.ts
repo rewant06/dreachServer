@@ -14,9 +14,36 @@ import {
   IsArray,
 } from 'class-validator';
 
-import { BloodGroup, Gender } from '@prisma/client';
+import { BloodGroup, Gender, ProviderType, Service } from '@prisma/client';
 
 
+
+export class ApplyForServiceProviderDto {
+  @IsString()
+  userId: string;
+
+  @IsEnum(ProviderType)
+  providerType: ProviderType;
+
+  @IsEnum(Service)
+  service: Service[];
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  specialization?: string[]; // Optional specialization
+
+  @IsOptional()
+  @IsNumber()
+  fee?: number; // Optional fee
+
+  @IsNumber()
+  experience: number; // Required experience
+
+  @IsOptional()
+  @IsString()
+  description?: string; // Optional description
+}
 
 export class createUserDto {
   @IsString()
