@@ -16,7 +16,6 @@ export class AdminService {
         select: {
           id: true,
           userId: true,
-          providerId: true,
           username: true,
           name: true,
           email: true,

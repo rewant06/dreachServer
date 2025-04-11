@@ -43,17 +43,17 @@ import {
 
 
   export class UpdateServiceProviderDetailsDto {
-  
+    @IsOptional()
     @IsString()
     name: string;
-    
+  
     @IsOptional()
     @IsEnum(ProviderType)
     providerType: ProviderType;
   
     @IsOptional()
     @IsEnum(Gender)
-    gender?: Gender;
+    gender: Gender;
   
     @IsOptional()
     @IsEnum(Status)
@@ -71,8 +71,8 @@ import {
     @IsEnum(BloodGroup)
     bloodGroup?: BloodGroup;
   
-    @IsString()
     @IsOptional()
+    @IsString()
     phone: string;
   
     @IsOptional()
@@ -80,50 +80,28 @@ import {
     fee: number;
   
     @IsOptional()
+    @IsNumber()
+    experience: number;
+  
+    @IsOptional()
     @IsArray()
     @IsString({ each: true })
-    specialization: string[];
+    specialization?: string[];
   
     @IsOptional()
     @IsArray()
-    educations: { university: string; degree: string; duration: string }[];
+    @IsEnum(Service, { each: true })
+    service?: Service[];
   
-  
-  // @IsString()
-  // @IsOptional()
-  // clinicInfoId?: string;
-
-  // @ValidateNested()
-  // @Type(() => ClinicInfoDto)
-  // @IsOptional()
-  // clinicInfo?: ClinicInfoDto;
-  
-  
-  @IsOptional()
-  @IsArray()
-  workExperiences: { clinic: string; duration: string }[];
-  
-    // @IsOptional()
-    // @IsArray()
-    // awards: { title: string; date: string; description: string }[];
-  
-    // @IsObject()
-    // @IsOptional()
-    // schedules: ;
-
-    @IsEnum(Service)
-    service?: Service;
-    
-    @IsString()
     @IsOptional()
+    @IsString()
     description: string;
-
+  
     @IsString()
     userId: string;
-
+  
     @IsString()
     providerId: string;
-
   }
   
   

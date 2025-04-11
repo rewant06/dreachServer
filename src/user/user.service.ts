@@ -218,6 +218,8 @@ import {
       const { userId, providerType, specialization, fee, experience, description } = dto;
     
       try {
+        console.log('Received DTO:', dto);
+    
         // Check if the user exists
         const user = await this.prisma.user.findUnique({
           where: { userId },
@@ -228,8 +230,24 @@ import {
           throw new NotFoundException('User not found');
         }
     
+        console.log('User found:', user);
+    
         // Generate a unique providerId
-        const providerId = `SP-${this.utils.generateRandomString(8)}`;
+        const providerId = `RI-${Math.random().toString(36).substring(2, 9).toUpperCase()}`;
+        console.log('Generated providerId:', providerId);
+    
+        // Check if the service provider already exists
+        const existingProvider = await this.prisma.serviceProvider.findUnique({
+          where: { userId },
+        });
+    
+        if (existingProvider) {
+          console.log('Service provider already exists, updating providerId...');
+          await this.prisma.serviceProvider.update({
+            where: { userId },
+            data: { providerId },
+          });
+        }
     
         // Create the ServiceProvider profile
         const serviceProviderProfile = await this.prisma.serviceProvider.create({
@@ -243,13 +261,11 @@ import {
             description,
             status: 'PENDING',
             providerId,
-            dob: user.dob?.toISOString() ?? '',
+            dob: user.dob ? new Date(user.dob) : null, // Handle null dob
           },
         });
     
-        if (!serviceProviderProfile) {
-          throw new InternalServerErrorException('Failed to create service provider profile');
-        }
+        console.log('Service provider profile created:', serviceProviderProfile);
     
         return serviceProviderProfile;
       } catch (error) {

@@ -28,74 +28,72 @@ export class ProviderService {
   private generateMediaId(): string {
     return uuidv4(); // Generate a unique ID
   }
-
-  async updateServiceProviderDetails(serviceProvider: UpdateServiceProviderDetailsDto) {
-
-    const {
-      providerId,
-      name,
-      gender,
-      age,
-      bloodGroup,
-      phone,
-      service,
-      dob,
-      ...res
-
-    } = serviceProvider;
-
+  async updateServiceProviderDetails(userId: string, providerId: string, updateData: UpdateServiceProviderDetailsDto) {
+    console.log('Received userId:', userId);
+    console.log('Received providerId:', providerId);
+    console.log('Update Data:', updateData);
+  
+    // Check if the user exists
     const user = await this.prisma.user.findUnique({
-      where: { id: serviceProvider.userId, },
-  });
-
-    if (!user) throw new NotFoundException("User not found");
-    console.log(user);
-
+      where: { id: userId },
+    });
+    if (!user) {
+      console.error(`User not found with ID: ${userId}`);
+      throw new NotFoundException('User not found');
+    }
+  
+    // Check if the service provider exists
     const provider = await this.prisma.serviceProvider.findUnique({
-      where: { id: providerId },
-      select: {document: true,},
+      where: { providerId: providerId },
     });
-
-    if (!provider) throw new NotFoundException("Service provider not found");
-    if(!provider.document) throw new NotFoundException("Service provider's Documents not found");
-
-    const updateUserProfile = await this.prisma.user.update({
-
-      where: { id: serviceProvider.userId, },
+    if (!provider) {
+      console.error(`Service provider not found with ID: ${providerId}`);
+      throw new NotFoundException('Service provider not found');
+    }
+  
+    console.log('Service provider found:', provider);
+  
+    // Update the user profile
+    const updatedUser = await this.prisma.user.update({
+      where: { id: userId },
       data: {
-          name: name,
-          dob: dob,
-          bloodGroup: bloodGroup,
-          phone: phone,
-          gender: gender,
+        name: updateData.name,
+        dob: updateData.dob ? new Date(updateData.dob) : undefined,
+        bloodGroup: updateData.bloodGroup,
+        phone: updateData.phone,
+        gender: updateData.gender,
       },
     });
-
-    const isServiceProviderExist = await this.prisma.serviceProvider.findUnique({
-
-      where: { id: providerId,},
-    });
-
-    if (!isServiceProviderExist) throw new NotFoundException("Service provider not found");
-
-    const updatedUser = await this.prisma.serviceProvider.update({
-      where: { id: providerId, }, 
-
-      data:{
-        ...res,
-        status: isServiceProviderExist.status === 'APPROVED' ? 'APPROVED' : 'PENDING',
-        
-      },
-
-      include: {
-        user: true,
+  
+    // Update the service provider profile
+    const updatedProvider = await this.prisma.serviceProvider.update({
+      where: { providerId: providerId },
+      data: {
+        specialization: updateData.specialization ?? [],
+        fee: updateData.fee ?? null,
+        experience: updateData.experience ?? null,
+        description: updateData.description ?? null,
+        status: updateData.status ?? provider.status,
+        service: updateData.service ?? [],
+        age: updateData.age ?? null,
+        providerType: updateData.providerType ?? provider.providerType,
       },
     });
+  
+    console.log('Updated User:', updatedUser);
+    console.log('Updated Service Provider:', updatedProvider);
+  
+    return {
+      message: 'Service provider updated successfully',
+      user: updatedUser,
+      provider: updatedProvider,
+    };
+  }
+  
 
-    if (!updatedUser) throw new InternalServerErrorException("Failed to update user profile");
 
-    return updatedUser;
-  } 
+
+
 
   async updateScheduleDetails(updateSchedule: UpdateScheduleDto) {
     try {

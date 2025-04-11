@@ -158,8 +158,6 @@ enum RecurrenceType {
 model User {
   id                String   @id @default(cuid()) 
   userId            String          @unique
-  providerId        String?  @unique
-  // providerType      ProviderType?
   username          String?  @unique 
   name              String? 
   email             String   @unique
@@ -268,10 +266,10 @@ model Admin {
 
 model ServiceProvider {
   id                String   @id @default(cuid()) // Unique identifier for the service provider
-  providerId        String   @unique 
+  providerId        String   @unique // Unique ID for the service provider
   name              String   // Name of the service provider (e.g., Doctor, Hospital)
   age               Int?
-  dob               String
+  dob               DateTime?
   providerType      ProviderType // Enum to define the type of provider (e.g., DOCTOR, HOSPITAL)
   specialization    String[] 
   fee               Float?

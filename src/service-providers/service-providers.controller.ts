@@ -1,6 +1,6 @@
 import { Body, Controller, Post, Get, Param, UseInterceptors, UploadedFile,Query } from '@nestjs/common';
 import { ProviderService } from './service-providers.service';
-import {UpdateServiceProviderDetailsDto, integratedBookAppointmentDTO} from './dto/dto';
+import {UpdateServiceProviderDetailsDto, integratedBookAppointmentDTO, UpdateScheduleDto} from './dto/dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Service} from '@prisma/client'
 import { formatISO } from 'date-fns';
@@ -15,15 +15,20 @@ export class ServiceProvidersController {
   ///////////////////POST///////////////////////////////////////////////////////////
 
   @Post('updateServiceProvider')
-  async updateServiceProvider(@Body() serviceProvider: UpdateServiceProviderDetailsDto) {
-      console.log(serviceProvider);
-      return await this.providerService.updateServiceProviderDetails(serviceProvider)
-  }
+async updateServiceProvider(
+  @Body('userId') userId: string,
+  @Body('providerId') providerId: string,
+  @Body() serviceProvider: UpdateServiceProviderDetailsDto,
+) {
+  console.log(serviceProvider);
+  return await this.providerService.updateServiceProviderDetails(userId, providerId, serviceProvider);
+}
+  
 
   @Post('updateSchedule')
-    async updateServiceProviderDetails(serviceProvider: UpdateServiceProviderDetailsDto) {
-      console.log(serviceProvider);
-      return await this.providerService.updateServiceProviderDetails(serviceProvider)
+    async  updateScheduleDetails(updateSchedule: UpdateScheduleDto) {
+      console.log(updateSchedule);
+      return await this.providerService.updateScheduleDetails(updateSchedule);
     }
 
   @Post('uploadProviderProfile')
