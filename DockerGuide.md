@@ -239,7 +239,7 @@ DATABASE_URL=postgresql://dreachBackend:dreachBackend123@host.docker.internal:54
 
 - Update your Dockerfile to include host.docker.internal DNS:
 
-````dockerfile
+```dockerfile
 FROM node:22.14.0
 
 WORKDIR /app
@@ -260,7 +260,7 @@ COPY . .
 EXPOSE 4000
 
 CMD [ "yarn", "start:dev" ]
-````
+```
 
 - Run your Docker container with these additional flags:
 
@@ -274,3 +274,91 @@ This setup will:
 - Allow the container to connect to your host machine's PostgreSQL
 - Map the container's port 4000 to your host's port 4000
 - Add host.docker.internal DNS resolution
+
+To delete unrequired files and save storage in a Docker environment, you can follow these steps:
+
+1. **Remove Unused Containers:**
+
+   - List all containers, including stopped ones:
+
+     ```bash
+     docker container ls -a
+     ```
+
+   - Remove stopped containers:
+
+     ```bash
+     docker container prune
+     ```
+
+2. **Remove Unused Images:**
+
+   - List all images:
+
+     ```bash
+     docker image ls
+     ```
+
+   - Remove unused images (dangling images):
+
+     ```bash
+     docker image prune
+     ```
+
+   - To remove all unused images, not just dangling ones:
+
+     ```bash
+     docker image prune -a
+     ```
+
+3. **Remove Unused Volumes:**
+
+   - List all volumes:
+
+     ```bash
+     docker volume ls
+     ```
+
+   - Remove unused volumes:
+
+     ```bash
+     docker volume prune
+     ```
+
+4. **Remove Unused Networks:**
+
+   - List all networks:
+
+     ```bash
+     docker network ls
+     ```
+
+   - Remove unused networks:
+
+     ```bash
+     docker network prune
+     ```
+
+5. **Remove Build Cache:**
+
+   - To remove the build cache, you can use:
+
+     ```bash
+     docker builder prune
+     ```
+
+6. **Use `docker system prune`:**
+
+- This command removes all stopped containers, unused networks, dangling images, and build cache:
+  
+```bash
+     docker system prune
+     ```
+   - To remove all unused data (including unused images), use:
+     ```bash
+     docker system prune -a
+     ```
+
+**Note:** Be cautious when using these commands, especially with the `-a` flag, as they will remove all unused resources, which might include images or volumes you intended to keep.
+
+For more detailed information, you can refer to the [Docker documentation on cleaning up unused resources](https://docs.docker.com/config/pruning/).
