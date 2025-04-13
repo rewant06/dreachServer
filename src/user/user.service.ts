@@ -233,10 +233,37 @@ import {
         console.log('User found:', user);
     
         // Generate a unique providerId
-        const providerId = `RI-${Math.random().toString(36).substring(2, 9).toUpperCase()}`;
-        console.log('Generated providerId:', providerId);
+        // const providerId = `RI-${Math.random().toString(36).substring(2, 9).toUpperCase()}`;
+        // console.log('Generated providerId:', providerId);
     
         // Check if the service provider already exists
+
+        // Generate a unique providerId based on providerType
+let prefix: string;
+
+switch (providerType) {
+  case 'Doctor':
+    prefix = 'DR';
+    break;
+  case 'Nursing':
+    prefix = 'NR';
+    break;
+  case 'DoctorsAssistant':
+    prefix = 'DA';
+    break;
+  case 'Hospital':
+    prefix = 'HS';
+    break;
+  case 'Lab':
+    prefix = 'LAB';
+    break;
+  default:
+    prefix = 'RI'; // Default prefix if providerType doesn't match any case
+}
+
+const providerId = `${prefix}-${Math.random().toString(36).substring(2, 9).toUpperCase()}`;
+console.log('Generated providerId:', providerId);
+
         const existingProvider = await this.prisma.serviceProvider.findUnique({
           where: { userId },
         });
@@ -375,6 +402,36 @@ import {
       } catch (error) {
         console.log(error);
         throw new InternalServerErrorException('Internal Server Error!');
+      }
+    }
+
+    async getApprovedDoctors() {
+      try {
+        return await this.prisma.serviceProvider.findMany({
+          where: {
+            providerType: 'Doctor', // Filter for doctors
+            status: 'APPROVED', // Only approved doctors
+          },
+          select: {
+            id: true,
+            name: true,
+            specialization: true,
+            fee: true,
+            experience: true,
+            description: true,
+            user: {
+              select: {
+                name: true,
+                email: true,
+                phone: true,
+                profilePic: true,
+              },
+            },
+          },
+        });
+      } catch (error) {
+        console.error('Error fetching approved doctors:', error);
+        throw new InternalServerErrorException('Internal Server Error');
       }
     }
   

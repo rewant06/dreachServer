@@ -16,7 +16,7 @@ import { Service, ProviderType } from '@prisma/client';
 
 @Controller('user')
 export class UserController {
-  constructor(private userService: UserService) {}
+constructor(private userService: UserService) {}
 
 
 
@@ -53,6 +53,10 @@ async createServiceProviderProfile(@Body() dto: ApplyForServiceProviderDto) {
   }
 }
 
+@Get('doctors')
+async getDoctors() {
+  return await this.userService.getApprovedDoctors();
+}
 
 
 
