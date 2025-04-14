@@ -28,6 +28,7 @@ export class AdminService {
           profilePic: true,
           createdAt: true,
           updatedAt: true,
+          address: true,
         },
       });
     } catch (error) {

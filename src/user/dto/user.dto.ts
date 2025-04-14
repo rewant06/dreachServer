@@ -127,6 +127,7 @@ export class UpdateUserDetailsDto {
 
 
 export class UpdatePatientsDetailsDto {
+  @IsOptional()
   @IsString()
   name: string;
 

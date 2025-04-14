@@ -9,7 +9,7 @@ import {
   
   import { UpdateUserDetailsDto, UpdatePatientsDetailsDto, ApplyForServiceProviderDto} from './dto/user.dto';
   import { PrismaService } from 'src/prisma.service';
-  import {  Service, ProviderType } from '@prisma/client';
+  import {  Service, ProviderType, Gender } from '@prisma/client';
   
   // import { hash } from 'bcrypt';
   // import { NotFoundError } from 'rxjs';
@@ -89,66 +89,66 @@ import {
       }
     }
   
-    async updateUsersProfile(serviceProvider: UpdateUserDetailsDto) {
-      // Check if the user exists
-      const user = await this.prisma.user.findUnique({
-        where: {
-          id: serviceProvider.userId,
-        },
-      });
+    // async updateUsersProfile(serviceProvider: UpdateUserDetailsDto) {
+    //   // Check if the user exists
+    //   const user = await this.prisma.user.findUnique({
+    //     where: {
+    //       id: serviceProvider.userId,
+    //     },
+    //   });
     
-      if (!user) throw new NotFoundException('User not found');
+    //   if (!user) throw new NotFoundException('User not found');
     
-      // Prepare the update data
-      const updateData: {
-        name?: string;
-        specialization?: string[];
-        fee?: number;
-        experience?: number;
-        description?: string;
-        address?: {
-          update: {
-            address: string;
-            city: string;
-            state: string;
-            country: string;
-            pincode: string;
-          };
-        };
-      } = {
-        name: serviceProvider.name,
-        specialization: serviceProvider.specialization, 
-        fee: serviceProvider.fee,
-        experience: serviceProvider.experience,
-        description: serviceProvider.description,
-      };
+    //   // Prepare the update data
+    //   const updateData: {
+    //     name?: string;
+    //     specialization?: string[];
+    //     fee?: number;
+    //     experience?: number;
+    //     description?: string;
+    //     address?: {
+    //       update: {
+    //         address: string;
+    //         city: string;
+    //         state: string;
+    //         country: string;
+    //         pincode: string;
+    //       };
+    //     };
+    //   } = {
+    //     name: serviceProvider.name,
+    //     specialization: serviceProvider.specialization, 
+    //     fee: serviceProvider.fee,
+    //     experience: serviceProvider.experience,
+    //     description: serviceProvider.description,
+    //   };
     
-      // Handle address update if provided
-      if (serviceProvider.address) {
-        updateData.address = {
-          update: {
-            address: serviceProvider.address.address,
-            city: serviceProvider.address.city,
-            state: serviceProvider.address.state,
-            country: serviceProvider.address.country,
-            pincode: serviceProvider.address.pincode,
-          },
-        };
-      }
+    //   // Handle address update if provided
+    //   if (serviceProvider.address) {
+    //     updateData.address = {
+    //       update: {
+    //         address: serviceProvider.address.address,
+    //         city: serviceProvider.address.city,
+    //         state: serviceProvider.address.state,
+    //         country: serviceProvider.address.country,
+    //         pincode: serviceProvider.address.pincode,
+    //       },
+    //     };
+    //   }
     
-      // Update the ServiceProvider
-      const updatedServiceProvider = await this.prisma.serviceProvider.update({
-        where: {
-          id: serviceProvider.userId, // Ensure `id` corresponds to the ServiceProvider model's unique identifier
-        },
-        data: updateData,
-      });
+    //   // Update the ServiceProvider
+    //   const updatedServiceProvider = await this.prisma.serviceProvider.update({
+    //     where: {
+    //       id: serviceProvider.userId, // Ensure `id` corresponds to the ServiceProvider model's unique identifier
+    //     },
+    //     data: updateData,
+    //   });
     
-      if (!updatedServiceProvider)
-        throw new InternalServerErrorException('Something went wrong');
+    //   if (!updatedServiceProvider)
+    //     throw new InternalServerErrorException('Something went wrong');
     
-      return updatedServiceProvider;
-    }
+    //   return updatedServiceProvider;
+    // }
   
     async generateMediaId() {
       return await this.storageService.generateMediaId();
@@ -348,11 +348,24 @@ console.log('Generated providerId:', providerId);
           where: {
             userId: patients.userId, // Ensure `userId` is passed in the DTO
           },
+          include: {
+            address: true, // Include the address relation
+            
+          },
         });
     
         if (!user) {
           console.error(`User with ID ${patients.userId} not found`);
           throw new UnauthorizedException('User not found or unauthorized access');
+        }
+    
+        // Convert `dob` to a valid Date object if provided
+        let formattedDob: Date | null = null;
+        if (dob) {
+          formattedDob = new Date(dob);
+          if (isNaN(formattedDob.getTime())) {
+            throw new BadRequestException('Invalid date format for dob. Expected ISO-8601 format.');
+          }
         }
     
         // Handle profile picture upload
@@ -373,6 +386,44 @@ console.log('Generated providerId:', providerId);
           console.log(`Profile picture uploaded successfully: ${profilePic}`);
         }
     
+        // Check if an address exists for the user
+        if (address) {
+          if (user.address) {
+            // Update the existing address
+            await this.prisma.address.update({
+              where: {
+                id: user.address.id,
+              },
+              data: {
+                address: address.address,
+                city: address.city,
+                state: address.state,
+                country: address.country,
+                pincode: address.pincode,
+              },
+            });
+          } else {
+            // Create a new address
+            if (!user) {
+              throw new BadRequestException('User information is required to create an address.');
+            }
+    
+            await this.prisma.address.create({
+              data: {
+                address: address.address,
+                city: address.city,
+                state: address.state,
+                country: address.country,
+                pincode: address.pincode,
+                user: {
+                  connect: { id: user.id },
+                },
+                
+              },
+            });
+          }
+        }
+    
         // Update user details
         await this.prisma.user.update({
           where: {
@@ -380,21 +431,16 @@ console.log('Generated providerId:', providerId);
           },
           data: {
             name,
-            dob,
-            gender,
+            dob: formattedDob, // Use the formatted Date object
+            gender: gender as Gender, // Ensure gender matches the enum
             bloodGroup,
-            address: {
-              update: {
-                ...address,
-              },
-            },
             phone,
             profilePic,
           },
         });
     
         console.log(`User profile updated successfully for userId: ${patients.userId}`);
-        return { message: 'Profile updated successfully' };
+        return { message: 'Profile updated successfully', user };
       } catch (error) {
         console.error(error);
         if (error.code === 'P2025') {

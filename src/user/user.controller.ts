@@ -7,12 +7,20 @@ import {
   Query,
   UploadedFile,
   UseInterceptors,
-  Patch
+  BadRequestException,
 } from '@nestjs/common';
 import { UserService } from './user.service';
-import { UpdateUserDetailsDto, ApplyForServiceProviderDto } from './dto/user.dto';
+import { UpdatePatientsDetailsDto, ApplyForServiceProviderDto } from './dto/user.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Service, ProviderType } from '@prisma/client';
+
+// Define the file filter for validating uploaded files
+const fileFilter = (req, file, callback) => {
+  if (!file.mimetype.match(/\/(jpg|jpeg|png|webp)$/)) {
+    return callback(new BadRequestException('Only image files are allowed!'), false);
+  }
+  callback(null, true);
+};
 
 @Controller('user')
 export class UserController {
@@ -27,16 +35,16 @@ async signup(@Body('email') email: string) {
 }
 
 @Post('updateUser')
-  @UseInterceptors(FileInterceptor('profileImage'))
-  async uploadDoctorProfile(
-    @UploadedFile() file: Express.Multer.File,
-    @Body() dto: UpdateUserDetailsDto
-  ) {
-    const { address, ...res } = dto;
-    console.log(file, address, res);
+@UseInterceptors(FileInterceptor('profileImage', { fileFilter }))
+async updatePatientProfile(
+  @UploadedFile() file: Express.Multer.File,
+  @Body() dto: UpdatePatientsDetailsDto
+) {
+  const { address, ...res } = dto;
+  console.log(file, address, res);
 
-    return this.userService.updatePatientsProfile({ address, ...res }, file);
-  }
+  return this.userService.updatePatientsProfile({ address, ...res }, file);
+}
 
   @Post('applyForServiceProvider')
 async createServiceProviderProfile(@Body() dto: ApplyForServiceProviderDto) {

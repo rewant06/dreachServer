@@ -196,7 +196,7 @@ model Patient {
   age               String
   userId            String  
   user              User     @relation(fields: [userId], references: [id])
-  address           Address[]
+ 
   conditions        String[]
   allergies         Allergy[]
   bloodGroup        BloodGroup
@@ -610,8 +610,8 @@ model Address {
   user      User?   @relation(fields: [userId], references: [id])
 
   clinicInfo  ClinicInfo? 
-  patientId  String 
-  patient     Patient @relation(fields: [patientId], references: [id]) 
+  
+  
 }
 
 model Education {
