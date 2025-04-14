@@ -31,38 +31,62 @@ import {
       private readonly storageService: StorageService,
     ) {}
 
-    
+    private async isUsernameTaken(username: string): Promise<boolean> {
+      const user = await this.prisma.user.findUnique({
+        where: { username },
+      });
+      return !!user;
+    }
+
+
   
     async createUser(email: string) {
-      const user = await this.prisma.user.findUnique({
-        where: { email },
-        include: {
-          serviceProvider: {
-            select: {
-              id: true,
-              providerType: true,
-              specialization: true,
-              experience: true, 
-              description: true,
-              fee: true,
+      try {
+        // Check if a user with the given email already exists
+        const existingUser = await this.prisma.user.findUnique({
+          where: { email },
+          include: {
+            serviceProvider: {
+              select: {
+                id: true,
+                providerType: true,
+                specialization: true,
+                experience: true,
+                description: true,
+                fee: true,
+              },
             },
           },
-        },
-      });
+        });
     
-      if (user) return user;
+        // If the user already exists, return the existing user
+        if (existingUser) return existingUser;
     
-      const newUser = await this.prisma.user.create({
-        data: {
-          email: email,
-          role: 'Patient',
-          userId: `PT-${this.utils.generateRandomString(5)}`,
-          username: email.split('@')[0],
-        },
-      });
+        // Generate a base username from the email
+        const baseUsername = email.split('@')[0];
+        let username = baseUsername + this.utils.generateRandomString(3);
     
-      if (!newUser) throw new InternalServerErrorException('Something went wrong');
-      return newUser;
+        // Ensure the username is unique
+        while (await this.isUsernameTaken(username)) {
+          username = baseUsername + this.utils.generateRandomString(3);
+        }
+    
+        // Create the new user
+        const newUser = await this.prisma.user.create({
+          data: {
+            email: email,
+            role: 'Patient',
+            userId: `PT-${this.utils.generateRandomString(5)}`, // Generate a unique userId
+            username: username, // Use the unique username
+          },
+        });
+    
+        // Return the newly created user
+        return newUser;
+      } catch (error) {
+        console.error('Error creating user:', error);
+        throw new InternalServerErrorException('Failed to create user');
+      }
     }
   
     async updateUsersProfile(serviceProvider: UpdateUserDetailsDto) {
