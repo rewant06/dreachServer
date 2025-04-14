@@ -31,7 +31,7 @@ export class ApplyForServiceProviderDto {
   @IsOptional()
   @IsArray()
   @IsString({ each: true })
-  specialization?: string[]; // Optional specialization
+  specialization?: string[]; 
 
   @IsOptional()
   @IsNumber()
@@ -43,6 +43,13 @@ export class ApplyForServiceProviderDto {
   @IsOptional()
   @IsString()
   description?: string; // Optional description
+
+  @IsOptional()
+  @IsString()
+  document?: string; // Optional description
+
+  @IsString()
+  registrationNumber: string;
 }
 
 export class createUserDto {

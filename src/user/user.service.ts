@@ -239,7 +239,7 @@ import {
   
   
     async createServiceProviderProfile(dto: ApplyForServiceProviderDto) {
-      const { userId, providerType, specialization, fee, experience, description } = dto;
+      const { userId, providerType, specialization, fee, experience, description, document, registrationNumber } = dto;
     
       try {
         console.log('Received DTO:', dto);
@@ -255,14 +255,7 @@ import {
         }
     
         console.log('User found:', user);
-    
-        // Generate a unique providerId
-        // const providerId = `RI-${Math.random().toString(36).substring(2, 9).toUpperCase()}`;
-        // console.log('Generated providerId:', providerId);
-    
-        // Check if the service provider already exists
-
-        // Generate a unique providerId based on providerType
+  
 let prefix: string;
 
 switch (providerType) {
@@ -299,15 +292,18 @@ console.log('Generated providerId:', providerId);
             data: { providerId },
           });
         }
-    
+        
         // Create the ServiceProvider profile
         const serviceProviderProfile = await this.prisma.serviceProvider.create({
           data: {
             user: { connect: { id: user.id } },
-            name: user.name ?? '',
+            name: user.name ?? 'Default Name' ,
             providerType,
+            registrationNumber: registrationNumber,
+            document: document,
             specialization: specialization ?? [],
             fee,
+            service: dto.service ?? [], 
             experience,
             description,
             status: 'PENDING',

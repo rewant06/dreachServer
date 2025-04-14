@@ -280,7 +280,7 @@ model ServiceProvider {
   labResults        LabResult[]
   therapyPlans      TherapyPlan[]
   document         String?
-
+  registrationNumber String?
   rating            Rating[]
 
   medicalRecords    MedicalRecord[]
