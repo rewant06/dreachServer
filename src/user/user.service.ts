@@ -239,7 +239,7 @@ import {
   
   
     async createServiceProviderProfile(dto: ApplyForServiceProviderDto) {
-      const { userId, providerType, specialization, fee, experience, description, document, registrationNumber } = dto;
+      const { userId, providerType, specialization, fee, experience, description, document, registrationNumber, service } = dto;
     
       try {
         console.log('Received DTO:', dto);
@@ -303,7 +303,7 @@ console.log('Generated providerId:', providerId);
             document: document,
             specialization: specialization ?? [],
             fee,
-            service: dto.service ?? [], 
+            service: service ?? [], 
             experience,
             description,
             status: 'PENDING',
