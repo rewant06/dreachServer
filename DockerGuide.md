@@ -172,7 +172,7 @@ Replace `<image-name>` with the name of the image you want to remove.
 
 ### Docker usage in this project
 
-- Create a .dockerignore file in the root directory of your project and add the following lines to it:
+- Create a `.dockerignore` file in the root directory of your project and add the following lines to it:
 
 ```.dockerignore
 # Node modules
@@ -198,7 +198,7 @@ README.md
 Dockerfile
 ```
 
-- Create a Dockerfile in the root directory of your project and add the following lines to it:
+- Create a `Dockerfile` in the root directory of your project and add the following lines to it:
 
 ```Dockerfile
 FROM node:22.14.0
@@ -207,6 +207,7 @@ WORKDIR /app
 
 # Enable Corepack to manage Yarn versions
 RUN corepack enable
+RUN npm i -g yarn npm
 
 # Copy package.json and yarn.lock first to leverage Docker cache
 COPY package.json yarn.lock .yarnrc.yml ./
@@ -230,14 +231,14 @@ CMD [ "yarn", "start:dev" ]
 docker network create dreach-network
 ```
 
-- Update your `.env` file to use host.docker.internal instead of localhost:
+- Update your `.env` file to use `host.docker.internal` instead of `localhost`:
 
 ```.env
 DATABASE_URL=postgresql://dreachBackend:dreachBackend123@host.docker.internal:5432/dreach
 # ...rest of the env variables remain same...
 ```
 
-- Update your Dockerfile to include host.docker.internal DNS:
+- Update your `Dockerfile` to include `host.docker.internal` DNS:
 
 ```dockerfile
 FROM node:22.14.0
@@ -391,12 +392,14 @@ To delete unrequired files and save storage in a Docker environment, you can fol
 
 6. **Use `docker system prune`:**
 
-- This command removes all stopped containers, unused networks, dangling images, and build cache:
+   - This command removes all stopped containers, unused networks, dangling images, and build cache:
 
-````bash
+     ```bash
      docker system prune
      ```
+
    - To remove all unused data (including unused images), use:
+
      ```bash
      docker system prune -a
      ```
@@ -404,4 +407,3 @@ To delete unrequired files and save storage in a Docker environment, you can fol
 **Note:** Be cautious when using these commands, especially with the `-a` flag, as they will remove all unused resources, which might include images or volumes you intended to keep.
 
 For more detailed information, you can refer to the [Docker documentation on cleaning up unused resources](https://docs.docker.com/config/pruning/).
-````
