@@ -1,8 +1,8 @@
 # Docker Guide
 
-<div align="center">
-  <img width="400" height="400" src="https://www.docker.com/app/uploads/2023/08/logo-guide-logos-1.svg" alt="docker-logo" title="logo-guide-logos-1">
-</div>
+<!-- Center alignment using HTML comments -->
+
+![docker-logo](https://www.docker.com/app/uploads/2023/08/logo-guide-logos-1.svg)
 
 ## What is Docker?
 
@@ -275,6 +275,48 @@ This setup will:
 - Map the container's port 4000 to your host's port 4000
 - Add host.docker.internal DNS resolution
 
+To use the `docker run` command with an image from a Docker Hub repository, you need to ensure that the image is available on Docker Hub and then pull it to your local machine if it's not already present. Here's how you can do it:
+
+### Steps to Run a Docker Hub Repository Image
+
+1. **Pull the Image from Docker Hub (if not already available locally):**
+
+   First, make sure the image is available on your local machine. If it's not, Docker will automatically pull it when you run the container. You can also manually pull it using:
+
+   ```bash
+   docker pull <YOUR_DOCKER_USERNAME>/<REPO_NAME>:<TAG>
+   ```
+
+   Replace `<YOUR_DOCKER_USERNAME>`, `<REPO_NAME>`, and `<TAG>` with your Docker Hub username, repository name, and the tag of the image you want to use.
+
+2. **Run the Image:**
+
+   Use the `docker run` command to start a container from the image. You can apply the same options as before, such as port mapping, network settings, and host configurations.
+
+   ```bash
+   docker run -p 4000:4000 --network dreach-network --add-host=host.docker.internal:host-gateway <YOUR_DOCKER_USERNAME>/<REPO_NAME>:<TAG>
+   ```
+
+   Replace `<YOUR_DOCKER_USERNAME>`, `<REPO_NAME>`, and `<TAG>` with the appropriate values for your image.
+
+### Example
+
+If your Docker Hub repository is `myusername/dreach-server` and you want to run the `latest` tag, the command would look like this:
+
+```bash
+docker run -p 4000:4000 --network dreach-network --add-host=host.docker.internal:host-gateway myusername/dreach-server:latest
+```
+
+### Key Points
+
+- **Image Name and Tag**: Ensure you specify the correct image name and tag. If you omit the tag, Docker defaults to `latest`.
+- **Network and Host Configurations**: Adjust the network and host settings as needed for your specific use case.
+- **Docker Hub Login**: If your repository is private, make sure you are logged in to Docker Hub using `docker login` before pulling or running the image.
+
+For more details on using Docker images from Docker Hub, refer to the [Docker Hub documentation](https://docs.docker.com/docker-hub/).
+
+## Docker Remove Unused Files
+
 To delete unrequired files and save storage in a Docker environment, you can follow these steps:
 
 1. **Remove Unused Containers:**
@@ -350,8 +392,8 @@ To delete unrequired files and save storage in a Docker environment, you can fol
 6. **Use `docker system prune`:**
 
 - This command removes all stopped containers, unused networks, dangling images, and build cache:
-  
-```bash
+
+````bash
      docker system prune
      ```
    - To remove all unused data (including unused images), use:
@@ -362,3 +404,4 @@ To delete unrequired files and save storage in a Docker environment, you can fol
 **Note:** Be cautious when using these commands, especially with the `-a` flag, as they will remove all unused resources, which might include images or volumes you intended to keep.
 
 For more detailed information, you can refer to the [Docker documentation on cleaning up unused resources](https://docs.docker.com/config/pruning/).
+````
