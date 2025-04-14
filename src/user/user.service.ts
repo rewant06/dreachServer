@@ -337,16 +337,16 @@ console.log('Generated providerId:', providerId);
       });
     }
   
-    async updatePatientsProfile(patients: UpdatePatientsDetailsDto, file?: Express.Multer.File) {
+    async updateUsersProfile(users: UpdatePatientsDetailsDto, file?: Express.Multer.File) {
       try {
-        console.log('Received userId:', patients.userId); // Debug log
+        console.log('Received userId:', users.userId); // Debug log
     
-        const { name, dob, gender, bloodGroup, address, phone } = patients;
+        const { name, dob, gender, bloodGroup, address, phone } = users;
     
         // Check if the user exists
         const user = await this.prisma.user.findUnique({
           where: {
-            userId: patients.userId, // Ensure `userId` is passed in the DTO
+            userId: users.userId, // Ensure `userId` is passed in the DTO
           },
           include: {
             address: true, // Include the address relation
@@ -355,7 +355,7 @@ console.log('Generated providerId:', providerId);
         });
     
         if (!user) {
-          console.error(`User with ID ${patients.userId} not found`);
+          console.error(`User with ID ${users.userId} not found`);
           throw new UnauthorizedException('User not found or unauthorized access');
         }
     
@@ -427,7 +427,7 @@ console.log('Generated providerId:', providerId);
         // Update user details
         await this.prisma.user.update({
           where: {
-            userId: patients.userId,
+            userId: users.userId,
           },
           data: {
             name,
@@ -439,7 +439,7 @@ console.log('Generated providerId:', providerId);
           },
         });
     
-        console.log(`User profile updated successfully for userId: ${patients.userId}`);
+        console.log(`User profile updated successfully for userId: ${users.userId}`);
         return { message: 'Profile updated successfully', user };
       } catch (error) {
         console.error(error);

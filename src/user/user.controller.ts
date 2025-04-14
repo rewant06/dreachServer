@@ -36,14 +36,14 @@ async signup(@Body('email') email: string) {
 
 @Post('updateUser')
 @UseInterceptors(FileInterceptor('profileImage', { fileFilter }))
-async updatePatientProfile(
+async updateUsersProfile(
   @UploadedFile() file: Express.Multer.File,
   @Body() dto: UpdatePatientsDetailsDto
 ) {
   const { address, ...res } = dto;
   console.log(file, address, res);
 
-  return this.userService.updatePatientsProfile({ address, ...res }, file);
+  return this.userService.updateUsersProfile({ address, ...res }, file);
 }
 
   @Post('applyForServiceProvider')
