@@ -172,7 +172,7 @@ Replace `<image-name>` with the name of the image you want to remove.
 
 ### Docker usage in this project
 
-- Create a `.dockerignore` file in the root directory of your project and add the following lines to it:
+- Create a .dockerignore file in the root directory of your project and add the following lines to it:
 
 ```.dockerignore
 # Node modules
@@ -198,7 +198,7 @@ README.md
 Dockerfile
 ```
 
-- Create a `Dockerfile` in the root directory of your project and add the following lines to it:
+- Create a Dockerfile in the root directory of your project and add the following lines to it:
 
 ```Dockerfile
 FROM node:22.14.0
@@ -207,7 +207,6 @@ WORKDIR /app
 
 # Enable Corepack to manage Yarn versions
 RUN corepack enable
-RUN npm i -g yarn npm
 
 # Copy package.json and yarn.lock first to leverage Docker cache
 COPY package.json yarn.lock .yarnrc.yml ./
@@ -231,14 +230,14 @@ CMD [ "yarn", "start:dev" ]
 docker network create dreach-network
 ```
 
-- Update your `.env` file to use `host.docker.internal` instead of `localhost`:
+- Update your `.env` file to use host.docker.internal instead of localhost:
 
 ```.env
 DATABASE_URL=postgresql://dreachBackend:dreachBackend123@host.docker.internal:5432/dreach
 # ...rest of the env variables remain same...
 ```
 
-- Update your `Dockerfile` to include `host.docker.internal` DNS:
+- Update your Dockerfile to include host.docker.internal DNS:
 
 ```dockerfile
 FROM node:22.14.0
@@ -275,6 +274,54 @@ This setup will:
 - Allow the container to connect to your host machine's PostgreSQL
 - Map the container's port 4000 to your host's port 4000
 - Add host.docker.internal DNS resolution
+
+## Docker Hub Repository
+
+To push two images into a single Docker Hub repository, you can use different tags for each image. Here's how you can do it:
+
+1. **Tag the Images**: Assign different tags to each image to differentiate them within the same repository. Replace `<YOUR_DOCKER_USERNAME>` with your Docker Hub username and `<REPO_NAME>` with the name of your repository.
+
+   For the first image:
+
+   ```bash
+   docker tag <IMAGE_ID_1> <YOUR_DOCKER_USERNAME>/<REPO_NAME>:tag1
+   ```
+
+   For the second image:
+
+   ```bash
+   docker tag <IMAGE_ID_2> <YOUR_DOCKER_USERNAME>/<REPO_NAME>:tag2
+   ```
+
+   Replace `<IMAGE_ID_1>` and `<IMAGE_ID_2>` with the actual image IDs or names you want to push.
+
+2. **Log in to Docker Hub**: Make sure you are logged in to Docker Hub. If not, use the following command:
+
+   ```bash
+   docker login
+   ```
+
+   Enter your Docker Hub credentials when prompted.
+
+3. **Push the Images**: Push each tagged image to your Docker Hub repository.
+
+   For the first image:
+
+   ```bash
+   docker push <YOUR_DOCKER_USERNAME>/<REPO_NAME>:tag1
+   ```
+
+   For the second image:
+
+   ```bash
+   docker push <YOUR_DOCKER_USERNAME>/<REPO_NAME>:tag2
+   ```
+
+4. **Verify the Push**: After pushing, you can verify that both images are available in your Docker Hub repository by visiting your repository page on [Docker Hub](https://hub.docker.com) and checking the tags section.
+
+By using different tags, you can manage multiple versions or variations of images within the same repository. For more information on tagging and pushing images, refer to the [Docker Hub image management documentation](https://docs.docker.com/docker-hub/repos/manage/hub-images/tags/).
+
+## Running Docker Images from Docker Hub
 
 To use the `docker run` command with an image from a Docker Hub repository, you need to ensure that the image is available on Docker Hub and then pull it to your local machine if it's not already present. Here's how you can do it:
 
@@ -316,7 +363,7 @@ docker run -p 4000:4000 --network dreach-network --add-host=host.docker.internal
 
 For more details on using Docker images from Docker Hub, refer to the [Docker Hub documentation](https://docs.docker.com/docker-hub/).
 
-## Docker Remove Unused Files
+### Clean Up Unused Resources
 
 To delete unrequired files and save storage in a Docker environment, you can follow these steps:
 
