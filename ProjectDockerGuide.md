@@ -17,7 +17,7 @@ docker network create dreach-network
 Run the PostgreSQL container with the following command:
 
 ```bash
-docker run -p 5432:5432 --network dreach-network --env=POSTGRES_USER=dreachBackend --env=POSTGRES_PASSWORD=dreachBackend123 --env=POSTGRES_DB=dreach --name dreach-postgres sudsarkar13/dreach-backend:postgres
+docker run -p 5432:5432 --network dreach-network --env=POSTGRES_USER=dreachBackend --env=POSTGRES_PASSWORD=dreachBackend123 --env=POSTGRES_DB=dreach --add-host=localhost:host-gateway --name dreach-postgres sudsarkar13/dreach-backend:postgres
 ```
 
 ## Run docker container with additional flags
