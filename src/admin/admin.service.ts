@@ -12,7 +12,19 @@ export class AdminService {
 
   async getAllUsers() {
     try {
-      return await this.prisma.user.findMany({
+      // Fetch service providers
+      const providers = await this.prisma.serviceProvider.findMany({
+        select: {
+          providerId: true,
+          service: true,
+          specialization: true,
+          userId: true,
+          status: true,
+        },
+      });
+  
+      // Fetch users
+      const users = await this.prisma.user.findMany({
         select: {
           id: true,
           userId: true,
@@ -31,12 +43,14 @@ export class AdminService {
           address: true,
         },
       });
+  
+      // Combine users and providers into a single response
+      return { users, providers };
     } catch (error) {
-      console.log(error);
+      console.error('Error in getAllUsers:', error.message);
       throw new InternalServerErrorException('Failed to fetch users');
     }
   }
-
   async getUnVerifiedProvider() {
     try {
       // Count all providers with specific roles
@@ -62,12 +76,15 @@ export class AdminService {
         },
         select: {
           id: true,
-          createdAt: true,
+          userId: true,
+          providerId: true,
+          registrationNumber: true,
           document: true,
           providerType: true, 
           specialization: true,
           service: true,
-          userId: true,
+          createdAt: true,
+         
 
           user: {
             select: {

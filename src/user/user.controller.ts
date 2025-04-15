@@ -78,23 +78,23 @@ async getDoctors() {
     return this.userService.findServiceProvidersByHomeVisit();
   }
 
-  @Get('getPatients')
-  async getPatients() {
-    return this.userService.getPatients();
-  }
+  // @Get('getPatients')
+  // async getPatients() {
+  //   return this.userService.getPatients();
+  // }
 
 
 @Get('findServiceProvidersList')
-async findServiceProvidersList(@Query() dto: { speciality: string; address: string,service:Service }) {
-  console.log(dto);
-  return this.userService.findServiceProvidersList(dto);
+async findServiceProvidersList() {
+  console.log();
+  return this.userService.findServiceProvidersList();
 }
 
   @Get('findDoctorbyVideoConsultation')
-  async findDoctorByVideoConsultation(@Query() dto: { date: string; slot: string }) {
-    console.log(dto);
+  async findDoctorByVideoConsultation() {
+    console.log();
     
-    return this.userService.findDoctorByVideoConsultation(dto);
+    return this.userService.findDoctorByVideoConsultation();
   }
 
   @Get('getServiceProvider/:username')

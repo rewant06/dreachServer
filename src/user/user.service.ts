@@ -479,15 +479,16 @@ console.log('Generated providerId:', providerId);
             status: 'APPROVED', // Only approved doctors
           },
           select: {
-            id: true,
+            providerId: true,
             name: true,
             specialization: true,
+            service: true,
+            registrationNumber: true,
             fee: true,
             experience: true,
             description: true,
             user: {
               select: {
-                name: true,
                 email: true,
                 phone: true,
                 profilePic: true,
@@ -559,16 +560,16 @@ console.log('Generated providerId:', providerId);
       }
     }
   
-    async findServiceProvidersList(dto: { speciality: string; address: string; service: Service | 'NONE' }) {
+    async findServiceProvidersList() {
       try {
-        // Validate the service field
-        const serviceFilter = dto.service === 'NONE' ? undefined : { has: dto.service };
     
         // Query the ServiceProvider model
         const serviceProviders = await this.prisma.serviceProvider.findMany({
           where: {
             status: 'APPROVED', // Filter for approved service providers
-            service: serviceFilter, // Filter by service if provided
+            providerType: {
+              in: ['Doctor', 'Hospital', 'Lab', 'Nursing', 'DoctorsAssistant'], // Filter for specific services
+            }
           },
           select: {
             id: true,
@@ -588,44 +589,8 @@ console.log('Generated providerId:', providerId);
           },
         });
     
-        // Filter service providers based on speciality and address
-        const filteredProviders = serviceProviders.filter((provider) => {
-          if (dto.speciality === 'NONE' && dto.address === 'NONE') return true;
     
-          if (dto.speciality !== 'NONE') {
-            if (!provider.specialization.includes(dto.speciality)) {
-              return false;
-            }
-    
-            if (dto.address === 'NONE') {
-              return true;
-            }
-    
-            const userAddress = provider.user?.address;
-            if (
-              (userAddress?.address && userAddress.address.toLowerCase().includes(dto.address.toLowerCase())) ||
-              (userAddress?.city && userAddress.city.toLowerCase().includes(dto.address.toLowerCase())) ||
-              (userAddress?.state && userAddress.state.toLowerCase().includes(dto.address.toLowerCase())) ||
-              (userAddress?.country && userAddress.country.toLowerCase().includes(dto.address.toLowerCase())) ||
-              userAddress?.pincode && userAddress.pincode.toLowerCase().includes(dto.address.toLowerCase())
-            ) {
-              return true;
-            }
-          } else {
-            const userAddress = provider.user?.address;
-            if (
-              (userAddress?.address && userAddress.address.toLowerCase().includes(dto.address.toLowerCase())) ||
-              (userAddress?.city && userAddress.city.toLowerCase().includes(dto.address.toLowerCase())) ||
-              (userAddress?.state && userAddress.state.toLowerCase().includes(dto.address.toLowerCase())) ||
-              (userAddress?.country && userAddress.country.toLowerCase().includes(dto.address.toLowerCase())) ||
-              userAddress?.pincode && userAddress.pincode.toLowerCase().includes(dto.address.toLowerCase())
-            ) {
-              return true;
-            }
-          }
-        });
-    
-        return filteredProviders;
+        return serviceProviders;
       } catch (error) {
         console.log(error);
         throw new InternalServerErrorException('Internal Server Error!');
@@ -643,6 +608,7 @@ console.log('Generated providerId:', providerId);
       select: {
         id: true,
         specialization: true,
+        service: true,
         fee: true,
         experience: true,
         user: {
@@ -771,7 +737,7 @@ console.log('Generated providerId:', providerId);
       }
     }
   
-    async findDoctorByVideoConsultation(dto: { date: string; slot: string }) {
+    async findDoctorByVideoConsultation() {
       try {
         // Fetch all approved doctors offering VideoConsultation
         const doctors = await this.prisma.serviceProvider.findMany({
@@ -785,11 +751,12 @@ console.log('Generated providerId:', providerId);
             specialization: true,
             fee: true,
             service: true,
-            schedule: {
-              include: {
-                slots: true, // Include slots for the schedule
-              },
-            },
+            experience: true,
+            // schedule: {
+            //   include: {
+            //     slots: true, // Include slots for the schedule
+            //   },
+            // },
             user: {
               select: {
                 name: true,
@@ -802,72 +769,13 @@ console.log('Generated providerId:', providerId);
             },
           },
         });
-    
-        const currentDate = new Date(dto.date);
-        const givenSlotHr = parseInt(dto.slot.split(':')[0]);
-        const givenSlotMin = parseInt(dto.slot.split(':')[1]);
-        const totalSlotTime = givenSlotHr * 60 + givenSlotMin + 30;
-    
-        // Check availability for each doctor
-        const availableDoctors = await Promise.all(
-          doctors.map(async (doctor) => {
-            // Fetch appointments for the doctor on the given date
-            const appointments = await this.prisma.appointment.findMany({
-              where: {
-                serviceProviderId: doctor.id,
-                appointmentTime: {
-                  gte: new Date(currentDate.setHours(0, 0, 0, 0)), // Start of the day
-                  lt: new Date(currentDate.setHours(23, 59, 59, 999)), // End of the day
-                },
-              },
-              select: {
-                appointmentTime: true,
-              },
-            });
-    
-            // Extract booked slots
-            const bookedSlots = appointments.map(
-              (appointment) => appointment.appointmentTime.toISOString().split('T')[1]?.slice(0, 5),
-            );
-    
-            // Filter available slots from the doctor's schedule
-            const availableSlots = doctor.schedule
-              ?.flatMap((schedule) => schedule.slots) // Extract slots from schedules
-              .filter((slot) => {
-                const slotTime = slot.startTime.toISOString().split('T')[1]?.slice(0, 5);
-                const slotHr = parseInt(slotTime.split(':')[0]);
-                const slotMin = parseInt(slotTime.split(':')[1]);
-                const slotTotalMin = slotHr * 60 + slotMin;
-    
-                // Exclude slots that are booked or outside the allowed time range
-                if (
-                  bookedSlots.includes(slotTime) ||
-                  slotTotalMin < totalSlotTime ||
-                  slotTotalMin > totalSlotTime + 30
-                ) {
-                  return false;
-                }
-                return true;
-              });
-    
-            // Return the doctor if they have available slots
-            return availableSlots?.length > 0
-              ? { ...doctor, availableSlots }
-              : null;
-          }),
-        );
-    
-        // Filter out doctors with no available slots
-        const filteredDoctors = availableDoctors.filter(
-          (doctor) => doctor !== null,
-        );
-    
-        return filteredDoctors;
-      } catch (error) {
-        console.log(error);
-        throw new InternalServerErrorException('Internal Server Error!');
-      }
-    }
+        return doctors;
+  } catch (error) {
+    console.log(error);
+    throw new InternalServerErrorException('Internal Server Error!');
+  }
+}
+
   
     async getServiceProviderByUsername(username: string) {
       try {
