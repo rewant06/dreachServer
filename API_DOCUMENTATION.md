@@ -6,7 +6,7 @@ This is the backend server for the Dr. Reach healthcare platform, built with Nes
 
 ## Project Structure
 
-```
+```directory
 src/
 ├── admin/          # Admin management functionality
 ├── auth/           # Authentication and authorization
@@ -91,7 +91,7 @@ Response: {
 
 1. **Making Authenticated Requests**
 
-   ```
+   ```typescript
    Headers: {
        "Authorization": "Bearer <access_token>"
    }
