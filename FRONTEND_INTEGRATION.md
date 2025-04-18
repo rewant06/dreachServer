@@ -6,7 +6,7 @@ This guide explains how to integrate the Dr. Reach frontend application with the
 
 Create the following directory structure in your frontend project:
 
-```
+```directory
 src/
 ├── api/                    # API integration layer
 │   ├── config/            # API configuration
@@ -52,7 +52,7 @@ src/
 
 ### Component Files
 
-```
+```directory
 components/
 ├── auth/
 │   ├── LoginForm/
@@ -73,7 +73,7 @@ components/
 
 ### Service Files
 
-```
+```directory
 api/services/
 ├── auth/
 │   ├── index.ts              # Service exports
@@ -86,7 +86,7 @@ api/services/
 
 ### Hook Files
 
-```
+```directory
 hooks/
 ├── api/
 │   ├── useAuth/
@@ -165,7 +165,7 @@ Add to your `tsconfig.json`:
 
 ### State Management Organization
 
-```
+```directory
 src/store/
 ├── auth/
 │   ├── actions.ts
@@ -213,7 +213,8 @@ src/store/
    - Group related components in feature folders
    - Include all related files (tests, styles, types)
    - Example structure:
-   ```
+
+   ```directory
    features/
    └── appointments/
        ├── components/
@@ -224,8 +225,8 @@ src/store/
 
 ## Prerequisites
 
-1. Backend server running (default: http://localhost:4000)
-2. Frontend application (Next.js) repository: https://github.com/OrgDrReach/dreach-clone-2025.git
+1. Backend server running (default: <http://localhost:4000>)
+2. Frontend application (Next.js) repository: <https://github.com/OrgDrReach/dreach-clone-2025.git>
 
 ## Configuration Steps
 
