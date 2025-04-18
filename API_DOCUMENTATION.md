@@ -33,7 +33,7 @@ The server implements a secure JWT (JSON Web Tokens) based authentication system
 
 #### Authentication Endpoints
 
-```
+```typescript
 POST /auth/signup
 Description: Register a new user
 Request Body: {
@@ -112,6 +112,7 @@ Response: {
      - CSRF attacks
 
 4. **Error Responses**
+
    ```json
    401 Unauthorized: {
        "statusCode": 401,
@@ -140,7 +141,7 @@ All API endpoints except `/auth/login` and `/auth/signup` require authentication
 
 ### User Management
 
-```
+```typescript
 POST   /user/signup                     # Create new user account
 POST   /user/updateUser                 # Update user profile with optional profile image
 POST   /user/applyForServiceProvider    # Apply to become a service provider
@@ -156,7 +157,7 @@ GET    /user/getPopularDoctors            # Get list of popular doctors
 
 ### Service Provider Endpoints
 
-```
+```typescript
 POST   /provider/updateServiceProvider     # Update provider profile
 POST   /provider/updateSchedule            # Update availability schedule
 POST   /provider/uploadProviderProfile     # Upload provider profile image
@@ -179,7 +180,7 @@ GET    /provider/getPatientsInfo          # Get patient information
 
 ### Admin Endpoints
 
-```
+```typescript
 GET    /admin/getAllUsers              # Get list of all registered users
 GET    /admin/getUnverifiedProvider   # Get list of unverified service providers
 GET    /admin/getAppointments         # Get all appointments with optional filters
@@ -190,21 +191,21 @@ POST   /admin/actionOnProvider        # Approve/Reject service provider applicat
 
 1. **Get All Users**
 
-```
+```typescript
 GET /admin/getAllUsers
 Response: List of all registered users in the system
 ```
 
 2. **Get Unverified Providers**
 
-```
+```typescript
 GET /admin/getUnverifiedProvider
 Response: List of service providers pending verification
 ```
 
 3. **Get Appointments**
 
-```
+```typescript
 GET /admin/getAppointments
 Query Parameters:
   - status: string (optional)
@@ -222,7 +223,7 @@ Response: {
 
 4. **Action on Provider**
 
-```
+```typescript
 POST /admin/actionOnProvider
 Body: {
   userId: string,
@@ -256,7 +257,7 @@ The server requires the following environment variables:
 
 The server is configured to accept requests from:
 
-- http://localhost:3000 (development)
+- <http://localhost:3000> (development)
 - Other whitelisted origins as configured in main.ts
 
 ## Error Handling
