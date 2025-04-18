@@ -29,11 +29,114 @@ src/
 
 ### Authentication
 
+The server implements a secure JWT (JSON Web Tokens) based authentication system with refresh token support. The authentication flow uses two types of tokens: access tokens and refresh tokens, providing a secure and efficient authentication mechanism.
+
+#### Authentication Endpoints
+
 ```
-POST /auth/signup            # Register new user
-POST /auth/login            # User login
-POST /auth/refresh          # Refresh authentication token
+POST /auth/signup
+Description: Register a new user
+Request Body: {
+    "email": string,
+    "password": string
+}
+Response: {
+    "user": UserObject,
+    "message": "User created successfully"
+}
+
+POST /auth/login
+Description: Authenticate user and receive tokens
+Request Body: {
+    "email": string,
+    "password": string
+}
+Response: {
+    "user": UserObject,
+    "backendToken": {
+        "accessToken": string,
+        "refreshToken": string,
+        "expiresIn": number  // Timestamp when the token expires
+    }
+}
+
+POST /auth/refresh
+Description: Get new access token using refresh token
+Headers Required: {
+    "Authorization": "Bearer <refresh_token>"
+}
+Response: {
+    "accessToken": string,
+    "refreshToken": string,
+    "expiresIn": number
+}
 ```
+
+#### Token Management
+
+1. **Access Token**
+
+   - Duration: 24 hours
+   - Used for authenticating API requests
+   - Include in Authorization header as `Bearer <token>`
+   - Contains user information and permissions
+
+2. **Refresh Token**
+   - Duration: 7 days
+   - Used to obtain new access tokens
+   - More secure, longer-lived token
+   - Store securely on client side
+
+#### Using Authentication
+
+1. **Making Authenticated Requests**
+
+   ```
+   Headers: {
+       "Authorization": "Bearer <access_token>"
+   }
+   ```
+
+2. **Token Expiration Handling**
+
+   - When access token expires (401 response), use refresh token to get new tokens
+   - If refresh token is expired, redirect to login
+
+3. **Security Measures**
+
+   - Tokens are signed with different secrets (ACCESS_TOKEN_SECRET and REFRESH_TOKEN_SECRET)
+   - JWT validation includes signature verification and expiration checks
+   - Implements protection against common attacks:
+     - Token hijacking
+     - Replay attacks
+     - CSRF attacks
+
+4. **Error Responses**
+   ```json
+   401 Unauthorized: {
+       "statusCode": 401,
+       "message": "Unauthorized",
+       "error": "Invalid credentials" | "Invalid or expired token" | "Token is missing"
+   }
+   ```
+
+#### Protected Routes
+
+All API endpoints except `/auth/login` and `/auth/signup` require authentication. Protected routes will return:
+
+- 401 if no token is provided
+- 401 if the token is invalid or expired
+- 403 if the user doesn't have sufficient permissions
+
+#### Best Practices
+
+1. Store tokens securely:
+   - Access token in memory
+   - Refresh token in secure HTTP-only cookie or secure storage
+2. Clear tokens on logout
+3. Implement token refresh mechanism before access token expires
+4. Handle token validation errors gracefully
+5. Never send tokens in URL parameters
 
 ### User Management
 
@@ -77,16 +180,57 @@ GET    /provider/getPatientsInfo          # Get patient information
 ### Admin Endpoints
 
 ```
-# Admin routes for managing users and service providers
-# Specific endpoints depend on implementation in AdminController
+GET    /admin/getAllUsers              # Get list of all registered users
+GET    /admin/getUnverifiedProvider   # Get list of unverified service providers
+GET    /admin/getAppointments         # Get all appointments with optional filters
+POST   /admin/actionOnProvider        # Approve/Reject service provider applications
 ```
 
-## Authentication
+#### Admin Endpoints Details
 
-The server uses JWT (JSON Web Tokens) for authentication. All protected routes require a valid JWT token in the Authorization header:
+1. **Get All Users**
 
 ```
-Authorization: Bearer <token>
+GET /admin/getAllUsers
+Response: List of all registered users in the system
+```
+
+2. **Get Unverified Providers**
+
+```
+GET /admin/getUnverifiedProvider
+Response: List of service providers pending verification
+```
+
+3. **Get Appointments**
+
+```
+GET /admin/getAppointments
+Query Parameters:
+  - status: string (optional)
+  - serviceProviderId: string (optional)
+  - userId: string (optional)
+  - page: number (default: 1)
+  - limit: number (default: 10)
+Response: {
+  data: Appointment[],
+  total: number,
+  page: number,
+  limit: number
+}
+```
+
+4. **Action on Provider**
+
+```
+POST /admin/actionOnProvider
+Body: {
+  userId: string,
+  action: string,
+  providerType: ProviderType
+}
+Description: Approve or reject service provider applications
+ProviderType options: DOCTOR, NURSE, PHYSIOTHERAPIST, etc.
 ```
 
 ## File Upload
