@@ -10,63 +10,66 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { UserService } from './user.service';
-import { UpdatePatientsDetailsDto, ApplyForServiceProviderDto } from './dto/user.dto';
+import {
+  UpdatePatientsDetailsDto,
+  ApplyForServiceProviderDto,
+} from './dto/user.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Service, ProviderType } from '@prisma/client';
 
 // Define the file filter for validating uploaded files
 const fileFilter = (req, file, callback) => {
   if (!file.mimetype.match(/\/(jpg|jpeg|png|webp)$/)) {
-    return callback(new BadRequestException('Only image files are allowed!'), false);
+    return callback(
+      new BadRequestException('Only image files are allowed!'),
+      false,
+    );
   }
   callback(null, true);
 };
 
 @Controller('user')
 export class UserController {
-constructor(private userService: UserService) {}
+  constructor(private userService: UserService) {}
 
+  @Post('signup')
+  async signup(@Body('email') email: string) {
+    console.log('Received email in controller:', email); // Debug log
+    return await this.userService.createUser(email);
+  }
 
+  @Post('updateUser')
+  @UseInterceptors(FileInterceptor('profileImage', { fileFilter }))
+  async updateUsersProfile(
+    @UploadedFile() file: Express.Multer.File,
+    @Body() dto: UpdatePatientsDetailsDto,
+  ) {
+    const { address, ...res } = dto;
+    console.log(file, address, res);
 
-@Post('signup')
-async signup(@Body('email') email: string) {
-  console.log('Received email in controller:', email); // Debug log
-  return await this.userService.createUser(email);
-}
-
-@Post('updateUser')
-@UseInterceptors(FileInterceptor('profileImage', { fileFilter }))
-async updateUsersProfile(
-  @UploadedFile() file: Express.Multer.File,
-  @Body() dto: UpdatePatientsDetailsDto
-) {
-  const { address, ...res } = dto;
-  console.log(file, address, res);
-
-  return this.userService.updateUsersProfile({ address, ...res }, file);
-}
+    return this.userService.updateUsersProfile({ address, ...res }, file);
+  }
 
   @Post('applyForServiceProvider')
-async createServiceProviderProfile(@Body() dto: ApplyForServiceProviderDto) {
-  try {
-    const serviceProviderProfile = await this.userService.createServiceProviderProfile(dto);
+  async createServiceProviderProfile(@Body() dto: ApplyForServiceProviderDto) {
+    try {
+      const serviceProviderProfile =
+        await this.userService.createServiceProviderProfile(dto);
 
-    return {
-      message: 'Service provider profile created successfully',
-      data: serviceProviderProfile,
-    };
-  } catch (error) {
-    console.error('Error in createServiceProviderProfile:', error.message);
-    throw error;
+      return {
+        message: 'Service provider profile created successfully',
+        data: serviceProviderProfile,
+      };
+    } catch (error) {
+      console.error('Error in createServiceProviderProfile:', error.message);
+      throw error;
+    }
   }
-}
 
-@Get('doctors')
-async getDoctors() {
-  return await this.userService.getApprovedDoctors();
-}
-
-
+  @Get('doctors')
+  async getDoctors() {
+    return await this.userService.getApprovedDoctors();
+  }
 
   @Get('getApprovedServiceProviders')
   async getApprovedServiceProviders() {
@@ -83,17 +86,16 @@ async getDoctors() {
   //   return this.userService.getPatients();
   // }
 
-
-@Get('findServiceProvidersList')
-async findServiceProvidersList() {
-  console.log();
-  return this.userService.findServiceProvidersList();
-}
+  @Get('findServiceProvidersList')
+  async findServiceProvidersList() {
+    console.log();
+    return this.userService.findServiceProvidersList();
+  }
 
   @Get('findDoctorbyVideoConsultation')
   async findDoctorByVideoConsultation() {
     console.log();
-    
+
     return this.userService.findDoctorByVideoConsultation();
   }
 
@@ -109,11 +111,16 @@ async findServiceProvidersList() {
   }
 
   @Post('addReview')
-  async addReview(@Body() dto: { serviceProviderId: string;
-        userId: string;
-        comment: string;
-        serviceProviderType: ProviderType;
-        score: number; }) {
+  async addReview(
+    @Body()
+    dto: {
+      serviceProviderId: string;
+      userId: string;
+      comment: string;
+      serviceProviderType: ProviderType;
+      score: number;
+    },
+  ) {
     console.log(dto);
     return this.userService.addReview(dto);
   }
@@ -121,6 +128,11 @@ async findServiceProvidersList() {
   @Get('getPopularDoctors')
   async getPopularDoctors() {
     return this.userService.getPopularDoctors();
+  }
+
+  @Get('fetchUserById/:userId')
+  async getUserById(@Param('userId') userId: string) {
+    return this.userService.getUserById(userId);
   }
 }
 
@@ -130,4 +142,3 @@ async findServiceProvidersList() {
 // function getAppointmentsForPatients(arg0: any, userId: any, string: any) {
 //   throw new Error('Function not implemented.');
 // }
-
