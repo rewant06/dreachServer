@@ -134,6 +134,26 @@ export class UserController {
   async getUserById(@Param('userId') userId: string) {
     return this.userService.getUserById(userId);
   }
+
+  @Get('fetchUserByEmail')
+  async getUserByEmail(@Query('email') email: string) {
+    if (!email) {
+      throw new BadRequestException('Email is required');
+    }
+    return this.userService.getUserByEmail(email);
+  }
+
+  @Get('fetchUserIdByEmail')
+  async fetchUserIdByEmail(@Query('email') email: string) {
+    if (!email) {
+      throw new BadRequestException('Email is required');
+    }
+    const user = await this.userService.fetchUserIdByEmail(email);
+    return {
+      id: user.id,
+      userId: user.userId,
+    };
+  }
 }
 
 // function findServiceProvidersByHomeVisit() {
