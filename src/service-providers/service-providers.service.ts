@@ -96,17 +96,23 @@ export class ProviderService {
   
   async createOrUpdateSchedule(dto: UpdateScheduleDto) {
     try {
-
       // Check if the provider exists
       const serviceProvider = await this.prisma.serviceProvider.findUnique({
-        where: { providerId: dto.providerId},
+        where: { providerId: dto.providerId },
       });
       if (!serviceProvider) {
         throw new NotFoundException(`Service provider with ID ${dto.providerId} not found`);
       }
-      // Now use the provider's actual ID for the foreign key
-      const serviceProviderId = serviceProvider.providerId;
-
+  
+      // Use the provider's actual ID for the foreign key
+      const serviceProviderId = serviceProvider.id;
+  
+      // Convert fields to proper types
+      const scheduleDate = dto.date ? new Date(dto.date) : undefined;
+      const scheduleStartTime = new Date(dto.startTime);
+      const scheduleEndTime = new Date(dto.endTime);
+      const isRecurring = dto.isRecurring ?? false;
+  
       // Check if ID exists in the DTO
       if (dto.id) {
         const schedule = await this.prisma.schedule.findUnique({
@@ -118,21 +124,23 @@ export class ProviderService {
           const updatedSchedule = await this.prisma.schedule.update({
             where: { id: dto.id },
             data: {
-              date: dto.date,
+              date: scheduleDate,
               dayOfWeek: dto.dayOfWeek,
-              isRecurring: dto.isRecurring,
+              isRecurring: isRecurring,
               recurrenceType: dto.recurrenceType,
-              startTime: dto.startTime,
-              endTime: dto.endTime,
+              startTime: scheduleStartTime,
+              endTime: scheduleEndTime,
               slotDuration: dto.slotDuration,
               location: dto.location,
               isAvailable: dto.isAvailable ?? true,
-              service: Array.isArray(dto.service) ? dto.service[0] : dto.service,
+              service: dto.service,
               status: dto.status ?? 'ACTIVE',
               serviceProviderId: serviceProviderId,
-              clinicInfo: dto.clinicInfoDto?.id ? {
-                connect: { id: dto.clinicInfoDto.id },
-              } : undefined,
+              clinicInfo: dto.clinicInfoDto?.id
+                ? {
+                    connect: { id: dto.clinicInfoDto.id },
+                  }
+                : undefined,
               updatedAt: new Date(),
             },
           });
@@ -141,26 +149,28 @@ export class ProviderService {
           return updatedSchedule;
         }
       }
-      
+  
       // If no ID provided or schedule with given ID doesn't exist, create new schedule
       const newSchedule = await this.prisma.schedule.create({
         data: {
-          date: dto.date,
+          date: scheduleDate,
           dayOfWeek: dto.dayOfWeek,
-          isRecurring: dto.isRecurring,
+          isRecurring: isRecurring,
           recurrenceType: dto.recurrenceType,
-          startTime: dto.startTime,
-          endTime: dto.endTime,
+          startTime: scheduleStartTime,
+          endTime: scheduleEndTime,
           slotDuration: dto.slotDuration,
           location: dto.location,
           isAvailable: dto.isAvailable ?? true,
-          service: Array.isArray(dto.service) ? dto.service[0] : dto.service,
+          service: dto.service,
           status: dto.status ?? 'ACTIVE',
           serviceProviderId: serviceProviderId,
           userId: dto.userId,
-          clinicInfo: dto.clinicInfoDto?.id ? {
-            connect: { id: dto.clinicInfoDto.id },
-          } : undefined,
+          clinicInfo: dto.clinicInfoDto?.id
+            ? {
+                connect: { id: dto.clinicInfoDto.id },
+              }
+            : undefined,
           createdAt: new Date(),
           updatedAt: new Date(),
         },
@@ -169,7 +179,7 @@ export class ProviderService {
       await this.generateSlots(newSchedule, dto.slotDuration);
       return newSchedule;
     } catch (error) {
-      console.error('Error creating or updating schedule:', error);
+      console.error('Error creating or updating schedule:', error.message);
       throw new InternalServerErrorException('Failed to create or update schedule');
     }
   }

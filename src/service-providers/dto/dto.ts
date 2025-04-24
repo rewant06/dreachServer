@@ -156,72 +156,6 @@ export class CreateSlotDto {
 }
 
 
-// export class UpdateScheduleDto {
-//   @IsString()
-//   id: string;
-
-//   @IsDate()
-//   @IsOptional()
-//   date?: Date;
-
-//   @IsEnum(WeekDay)
-//   @IsOptional()
-//   dayOfWeek?: WeekDay;
-
-//   @IsBoolean()
-//   @IsOptional()
-//   isRecurring?: boolean;
-
-//   @IsEnum(RecurrenceType)
-//   @IsOptional()
-//   recurrenceType?: RecurrenceType;
-
-//   @IsDate()
-//   startTime: Date;
-
-//   @IsDate()
-//   endTime: Date;
-
-//   @IsInt()
-//   slotDuration: number;
-
-//   @IsString()
-//   @IsOptional()
-//   location: string;
-
-//   @IsBoolean()
-//   @IsOptional()
-//   isAvailable?: boolean;
-
-//   @IsEnum(Service)
-//   @IsOptional()
-//   @IsArray()
-//   service: Service;
-
-//   @IsEnum(Status)
-//   @IsOptional()
-//   @IsArray()
-//   status?: Status;
-
-//   @IsString()
-//   userId: string;
-
-//   @IsDate()
-//   @IsOptional()
-//   createdAt?: Date;
-
-//   @IsDate()
-//   @IsOptional()
-//   updatedAt?: Date;
-
-//   @ValidateNested()
-//   @Type(() => ClinicInfoDto)
-//   clinicInfoDto = ClinicInfoDto;
-
-// }
-
-
-
 export class UpdateScheduleDto {
   @IsString()
   id: string;
@@ -237,6 +171,7 @@ export class UpdateScheduleDto {
   @IsOptional()
   dayOfWeek?: WeekDay;
 
+  @IsBoolean()
   @IsOptional()
   isRecurring?: boolean;
 
