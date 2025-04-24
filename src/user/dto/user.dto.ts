@@ -129,7 +129,7 @@ export class UpdateUserDetailsDto {
   address: AddressDto; // Address details
 
   @IsString()
-  userId: string; // User ID to identify the service provider
+userId: string; // User ID to identify the service provider
 }
 
 

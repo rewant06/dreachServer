@@ -44,6 +44,12 @@ enum Gender {
 }
 
 enum Status {
+  ACTIVE
+  INACTIVE
+  BLOCKED
+  DELETED
+  ARCHIVED
+  SUSPENDED
   PENDING
   APPROVED
   REJECTED
@@ -496,47 +502,47 @@ model Request {
 // Appointment Schedule and Slot creating -------------------------------------
 
 model Appointment {
-  id                String   @id @default(cuid()) // Unique identifier for the appointment
-  service           Service[] // Enum to define the type of service (e.g., HomeCare, VideoConsultation)
-  status            Status // Enum to track the status of the appointment (e.g., PENDING, CONFIRMED)
-  appointmentTime   DateTime // Date and time of the appointment
-  bookedAt          DateTime @default(now()) // Timestamp for when the appointment was booked
-  reason            String? // Optional reason for the appointment
+  id                String   @id @default(cuid()) 
+  service           Service[] 
+  status            Status 
+  appointmentTime   DateTime 
+  bookedAt          DateTime @default(now()) 
+  reason            String? 
 
   // Booking for Others
-  isForOthers       Boolean  @default(false) // Indicates if the appointment is for someone else
-  othersAppointment OthersAppointment? // Relation to the OthersAppointment model
+  isForOthers       Boolean  @default(false) 
+  othersAppointment OthersAppointment? 
 
   currentLocation   CurrentLocation?
-  slotId            String @unique // Required ID of the associated slot
-  slot              Slot     @relation(fields: [slotId], references: [id]) // Required relation to the Slot model
-  userId            String // ID of the user who booked the appointment
-  user              User   @relation(fields: [userId], references: [id]) // Relation to the User model
-  serviceProviderId String // ID of the service provider (e.g., doctor, hospital)
-  serviceProvider   ServiceProvider @relation(fields: [serviceProviderId], references: [id]) // Relation to the ServiceProvider model
-  patientId         String // ID of the patient (if applicable)
-  patient          Patient @relation(fields: [patientId], references: [id]) // Relation to the Patient model
-  payment         Payment[] // Optional relation to the Payment model
-  createdAt         DateTime @default(now()) // Timestamp for when the appointment was created
-  updatedAt         DateTime @updatedAt // Timestamp for when the appointment was last updated
+  slotId            String @unique 
+  slot              Slot     @relation(fields: [slotId], references: [id]) 
+  userId            String 
+  user              User   @relation(fields: [userId], references: [id]) 
+  serviceProviderId String 
+  serviceProvider   ServiceProvider @relation(fields: [serviceProviderId], references: [id]) 
+  patientId         String 
+  patient          Patient @relation(fields: [patientId], references: [id]) 
+  payment         Payment[] 
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
   
 
   tags              Tag[] @relation("AppointmentTags")
 }
 
 model OthersAppointment {
-  id                String   @id @default(cuid()) // Unique identifier for the others' appointment
-  name              String   // Name of the person for whom the appointment is booked
-  contact           String   // Contact number of the person
-  email             String?  // Email of the person (optional)
-  relationship      String   // Relationship with the person (e.g., Friend, Family, Colleague)
+  id                String   @id @default(cuid()) 
+  name              String  
+  contact           String   
+  email             String?  
+  relationship      String   
   age               Int     
   gender            Gender 
-  reason            String?  // Reason for the appointment (optional)
+  reason            String?  
 
   // Relations
-  appointmentId     String  @unique // ID of the associated appointment
-  appointment       Appointment @relation(fields: [appointmentId], references: [id]) // Relation to the Appointment model
+  appointmentId     String  @unique 
+  appointment       Appointment @relation(fields: [appointmentId], references: [id]) 
 
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt 
@@ -559,8 +565,10 @@ model Schedule {
   serviceProviderId String
   serviceProviders   ServiceProvider @relation(fields: [serviceProviderId], references: [id]) 
   slots             Slot[] 
-  providerId        String 
-  userId            String 
+  clinicInfo        ClinicInfo[]
+  userId            String
+
+
 
   createdAt         DateTime @default(now()) 
   updatedAt         DateTime @updatedAt 
@@ -568,16 +576,14 @@ model Schedule {
 
 model Slot {
   id                String   @id @default(cuid()) 
-  slotDate          DateTime 
+  slotDate          DateTime? 
   startTime         DateTime 
   endTime           DateTime 
   isBooked          Boolean  @default(false)
   scheduleId        String  
   schedule          Schedule @relation(fields: [scheduleId], references: [id]) 
   appointment       Appointment? 
-  clinicInfoId      String 
-  clinicInfo        ClinicInfo @relation(fields: [clinicInfoId], references: [id]) 
-  bookedAt         DateTime @default(now()) 
+  bookedAt         DateTime? @default(now()) 
   updatedAt         DateTime @updatedAt 
 }
 
@@ -589,9 +595,10 @@ model ClinicInfo {
   phone     String   
   images      String[] 
 
-  // Relations
-  slot              Slot[]    
+  // Relations   
   serviceProviders ServiceProvider[] 
+  scheduleId       String?
+  schedule         Schedule? @relation(fields: [scheduleId], references: [id])
   createdAt   DateTime @default(now()) 
   updatedAt   DateTime @updatedAt 
 }
@@ -610,6 +617,8 @@ model Address {
   
   
 }
+
+
 
 model Education {
   id          String   @id @default(cuid()) 

@@ -15,6 +15,7 @@ export class AdminService {
       // Fetch service providers
       const providers = await this.prisma.serviceProvider.findMany({
         select: {
+          name: true,
           providerId: true,
           service: true,
           specialization: true,

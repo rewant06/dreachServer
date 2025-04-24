@@ -506,6 +506,7 @@ export class UserService {
           email: email,
         },
         select: {
+          
           id: true,
           email: true,
           name: true,
@@ -516,6 +517,7 @@ export class UserService {
           serviceProvider: {
             select: {
               id: true,
+              userId: true,
               specialization: true,
               fee: true,
               experience: true,

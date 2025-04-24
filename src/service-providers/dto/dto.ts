@@ -13,32 +13,9 @@ import {
   } from 'class-validator';
   
   import { BloodGroup, Gender, Service, Status, WeekDay, RecurrenceType, ProviderType } from '@prisma/client';
+import { Type } from 'class-transformer';
 
-  class ClinicInfoDto {
-    @IsString()
-    id: string;
-  
-    @IsString()
-    clinicName: string;
-  
-    @IsString()
-    addressId: string;
-  
-    @IsString()
-    contact: string;
-  
-    @IsArray()
-    @IsString({ each: true })
-    images: string[];
-  
-    @IsOptional()
-    @IsString()
-    createdAt?: string;
-  
-    @IsOptional()
-    @IsString()
-    updatedAt?: string;
-  }
+
 
 
 
@@ -47,17 +24,17 @@ import {
     @IsString()
     name: string;
   
-    @IsOptional()
-    @IsEnum(ProviderType)
-    providerType: ProviderType;
+    // @IsOptional()
+    // @IsEnum(ProviderType)
+    // providerType: ProviderType;
   
     @IsOptional()
     @IsEnum(Gender)
     gender: Gender;
   
-    @IsOptional()
-    @IsEnum(Status)
-    status: Status;
+    // @IsOptional()
+    // @IsEnum(Status)
+    // status: Status;
   
     @IsOptional()
     @IsNumber()
@@ -119,7 +96,31 @@ import {
   //   };
   // }
   
-
+  class ClinicInfoDto {
+    @IsString()
+    id: string;
+  
+    @IsString()
+    clinicName: string;
+  
+    @IsString()
+    addressId: string;
+  
+    @IsString()
+    contact: string;
+  
+    @IsArray()
+    @IsString({ each: true })
+    images: string[];
+  
+    @IsOptional()
+    @IsString()
+    createdAt?: string;
+  
+    @IsOptional()
+    @IsString()
+    updatedAt?: string;
+  }
 
 
 export class CreateSlotDto {
@@ -155,10 +156,78 @@ export class CreateSlotDto {
 }
 
 
+// export class UpdateScheduleDto {
+//   @IsString()
+//   id: string;
+
+//   @IsDate()
+//   @IsOptional()
+//   date?: Date;
+
+//   @IsEnum(WeekDay)
+//   @IsOptional()
+//   dayOfWeek?: WeekDay;
+
+//   @IsBoolean()
+//   @IsOptional()
+//   isRecurring?: boolean;
+
+//   @IsEnum(RecurrenceType)
+//   @IsOptional()
+//   recurrenceType?: RecurrenceType;
+
+//   @IsDate()
+//   startTime: Date;
+
+//   @IsDate()
+//   endTime: Date;
+
+//   @IsInt()
+//   slotDuration: number;
+
+//   @IsString()
+//   @IsOptional()
+//   location: string;
+
+//   @IsBoolean()
+//   @IsOptional()
+//   isAvailable?: boolean;
+
+//   @IsEnum(Service)
+//   @IsOptional()
+//   @IsArray()
+//   service: Service;
+
+//   @IsEnum(Status)
+//   @IsOptional()
+//   @IsArray()
+//   status?: Status;
+
+//   @IsString()
+//   userId: string;
+
+//   @IsDate()
+//   @IsOptional()
+//   createdAt?: Date;
+
+//   @IsDate()
+//   @IsOptional()
+//   updatedAt?: Date;
+
+//   @ValidateNested()
+//   @Type(() => ClinicInfoDto)
+//   clinicInfoDto = ClinicInfoDto;
+
+// }
+
+
 
 export class UpdateScheduleDto {
   @IsString()
   id: string;
+
+  @IsString()
+  userId: string;
 
   @IsDate()
   @IsOptional()
@@ -168,7 +237,6 @@ export class UpdateScheduleDto {
   @IsOptional()
   dayOfWeek?: WeekDay;
 
-  @IsBoolean()
   @IsOptional()
   isRecurring?: boolean;
 
@@ -186,84 +254,103 @@ export class UpdateScheduleDto {
   slotDuration: number;
 
   @IsString()
-  @IsOptional()
   location: string;
 
-  @IsBoolean()
   @IsOptional()
   isAvailable?: boolean;
 
   @IsEnum(Service)
-  @IsOptional()
-  @IsArray()
   service: Service;
 
   @IsEnum(Status)
   @IsOptional()
-  @IsArray()
   status?: Status;
-
-  @IsString()
-  userId: string;
 
   @IsString()
   providerId: string;
 
-  @IsDate()
-  @IsOptional()
-  createdAt?: Date;
-
-  @IsDate()
-  @IsOptional()
-  updatedAt?: Date;
+  @ValidateNested()
+  @Type(() => ClinicInfoDto)
+  clinicInfoDto?: ClinicInfoDto;
 }
 
+// export class AppointmentDto {
+//   @IsString()
+//   id: string;
 
-export class AppointmentDto {
+//   @IsEnum(Service, { each: true })
+//   service: Service[];
+
+//   @IsEnum(Status)
+//   status: Status;
+
+//   @IsDate()
+//   appointmentTime: Date;
+
+//   @IsDate()
+//   @IsOptional()
+//   bookedAt?: Date;
+
+//   @IsString()
+//   @IsOptional()
+//   reason?: string;
+
+//   @IsBoolean()
+//   @IsOptional()
+//   isForOthers?: boolean;
+
+//   @IsString()
+//   @IsOptional()
+//   slotId?: string;
+
+//   @IsString()
+//   userId: string;
+
+//   @IsString()
+//   serviceProviderId: string;
+
+//   @IsString()
+//   patientId: string;
+
+//   @IsDate()
+//   @IsOptional()
+//   createdAt?: Date;
+
+//   @IsDate()
+//   @IsOptional()
+//   updatedAt?: Date;
+// }
+
+
+export class BookAppointmentDto {
   @IsString()
-  id: string;
-
-  @IsEnum(Service, { each: true })
-  service: Service[];
-
-  @IsEnum(Status)
-  status: Status;
-
-  @IsDate()
-  appointmentTime: Date;
-
-  @IsDate()
-  @IsOptional()
-  bookedAt?: Date;
-
-  @IsString()
-  @IsOptional()
-  reason?: string;
-
-  @IsBoolean()
-  @IsOptional()
-  isForOthers?: boolean;
-
-  @IsString()
-  @IsOptional()
-  slotId?: string;
-
-  @IsString()
-  userId: string;
+  slotId: string;
 
   @IsString()
   serviceProviderId: string;
 
   @IsString()
+  userId: string;
+
+  @IsDate()
+  appointmentTime: Date;
+
+  @IsEnum(Service)
+  service: Service;
+
+  @IsOptional()
+  @IsString()
+  reason?: string;
+
+  @IsOptional()
+  @IsEnum(Status)
+  status?: Status;
+
+  @IsOptional()
+  isForOthers?: boolean;
+
+  @IsString()
   patientId: string;
-
-  @IsDate()
-  @IsOptional()
-  createdAt?: Date;
-
-  @IsDate()
-  @IsOptional()
-  updatedAt?: Date;
 }
 
 export class integratedBookAppointmentDTO {

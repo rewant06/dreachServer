@@ -1,6 +1,6 @@
 import { Body, Controller, Post, Get, Param, UseInterceptors, UploadedFile,Query } from '@nestjs/common';
 import { ProviderService } from './service-providers.service';
-import {UpdateServiceProviderDetailsDto, integratedBookAppointmentDTO, UpdateScheduleDto} from './dto/dto';
+import {UpdateServiceProviderDetailsDto, integratedBookAppointmentDTO, UpdateScheduleDto, BookAppointmentDto} from './dto/dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Service} from '@prisma/client'
 import { formatISO } from 'date-fns';
@@ -25,11 +25,19 @@ async updateServiceProvider(
 }
   
 
-  @Post('updateSchedule')
-    async  updateScheduleDetails(updateSchedule: UpdateScheduleDto) {
-      console.log(updateSchedule);
-      return await this.providerService.updateScheduleDetails(updateSchedule);
-    }
+
+  @Post('schedule')
+  async createOrUpdateSchedule(@Body() dto: UpdateScheduleDto) {
+    return this.providerService.createOrUpdateSchedule(dto);
+  }
+
+  @Post('appointment')
+  async bookAppointment(@Body() dto: BookAppointmentDto) {
+    return this.providerService.bookAppointment(dto);
+  }
+
+
+
 
   @Post('uploadProviderProfile')
   @UseInterceptors(FileInterceptor('profileImage'))
@@ -67,11 +75,11 @@ async updateServiceProvider(
       return await this.providerService.integratedCareCheckProviderAvailability(dto); // Corrected method name
     }
 
-  @Post('bookAppointment')
-    async bookAppointment(@Body() dto: any) {
-    console.log(dto, formatISO(new Date(dto.appointmentSlotDate))); 
-    return await this.providerService.bookAppointment(dto);
-}
+//   @Post('bookAppointment')
+//     async bookAppointment(@Body() dto: any) {
+//     console.log(dto, formatISO(new Date(dto.appointmentSlotDate))); 
+//     return await this.providerService.bookAppointment(dto);
+// }
 
 @Post('integratedBookAppointment')
 async IntegratedBookAppointment(@Body() dto: integratedBookAppointmentDTO) {

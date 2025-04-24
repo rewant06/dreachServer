@@ -6,12 +6,12 @@ import {
   InternalServerErrorException,
   NotFoundException,
   UnauthorizedException } from '@nestjs/common'; 
-import { UpdateServiceProviderDetailsDto, UpdateScheduleDto, AppointmentDto, integratedBookAppointmentDTO } from './dto/dto';
+import { UpdateServiceProviderDetailsDto, UpdateScheduleDto, BookAppointmentDto, integratedBookAppointmentDTO } from './dto/dto';
 import { PrismaService } from 'src/prisma.service';
 import { StorageService } from 'src/storage/storage.service';
 // import * as sharp from 'sharp';
 import { format, formatISO } from 'date-fns';
-import { Service} from '@prisma/client';
+import { Service, Schedule} from '@prisma/client';
 import { v4 as uuidv4 } from 'uuid';
 import * as sharp from 'sharp';
 import { Readable } from 'stream';
@@ -28,6 +28,9 @@ export class ProviderService {
   private generateMediaId(): string {
     return uuidv4(); // Generate a unique ID
   }
+
+  
+
   async updateServiceProviderDetails(userId: string, providerId: string, updateData: UpdateServiceProviderDetailsDto) {
     console.log('Received userId:', userId);
     console.log('Received providerId:', providerId);
@@ -73,10 +76,10 @@ export class ProviderService {
         fee: updateData.fee ?? null,
         experience: updateData.experience ?? null,
         description: updateData.description ?? null,
-        status: updateData.status ?? provider.status,
+        // status: updateData.status ?? provider.status,
         service: updateData.service ?? [],
         age: updateData.age ?? null,
-        providerType: updateData.providerType ?? provider.providerType,
+        // providerType: updateData.providerType ?? provider.providerType,
       },
     });
   
@@ -90,80 +93,246 @@ export class ProviderService {
     };
   }
   
+ 
 
-
-
-
-
-  async updateScheduleDetails(updateSchedule: UpdateScheduleDto) {
-    try {
-      // Find the existing schedule by serviceProviderId
-      const schedule = await this.prisma.schedule.findUnique({
-        where: {
-          id: updateSchedule.id, // Use the schedule ID to find the existing schedule
-        },
-      });
+  // async updateScheduleDetails(dto: UpdateScheduleDto) {
+  //   try {
+  //     // Find the existing schedule by serviceProviderId
+  //     const schedule = await this.prisma.schedule.findUnique({
+  //       where: {
+  //         id: dto.id, // Use the schedule ID to find the existing schedule
+  //       },
+  //     });
   
-      if (schedule) {
-        // Update the existing schedule
-        const updatedSchedule = await this.prisma.schedule.update({
-          where: {
-            id: updateSchedule.id,
-          },
-          data: {
-            date: updateSchedule.date,
-            dayOfWeek: updateSchedule.dayOfWeek,
-            isRecurring: updateSchedule.isRecurring,
-            recurrenceType: updateSchedule.recurrenceType,
-            startTime: updateSchedule.startTime,
-            endTime: updateSchedule.endTime,
-            slotDuration: updateSchedule.slotDuration,
-            location: updateSchedule.location,
-            isAvailable: updateSchedule.isAvailable,
-            service: updateSchedule.service,
-            status: updateSchedule.status,
-          },
-        });
+  //     if (schedule) {
+  //       // Update the existing schedule
+  //       const updatedSchedule = await this.prisma.schedule.update({
+  //         where: {
+  //           id: dto.id,
+  //         },
+  //         data: {
+  //           date: dto.date,
+  //           dayOfWeek: dto.dayOfWeek,
+  //           isRecurring: dto.isRecurring,
+  //           recurrenceType: dto.recurrenceType,
+  //           startTime: dto.startTime,
+  //           endTime: dto.endTime,
+  //           slotDuration: dto.slotDuration,
+  //           location: dto.location,
+  //           isAvailable: dto.isAvailable?? true,
+  //           service: dto.service,
+  //           status: dto.status ?? 'ACTIVE',
+            
+  //         },
+          
+  //       });
+
+  //       console.log('Schedule updated:', updatedSchedule);
+  //       return updatedSchedule;
+  //     } else {
+  //       // Create a new schedule if it doesn't exist
+  //       const newSchedule = await this.prisma.schedule.create({
+  //         data: {
+  //           id: dto.id,
+  //           date: dto.date,
+  //           dayOfWeek: dto.dayOfWeek,
+  //           isRecurring: dto.isRecurring,
+  //           recurrenceType: dto.recurrenceType,
+  //           startTime: dto.startTime,
+  //           endTime: dto.endTime,
+  //           slotDuration: dto.slotDuration,
+  //           location: dto.location,
+  //           isAvailable: dto.isAvailable ?? true,
+  //           service: dto.service,
+  //           // status: dto.status,
+            
+  //           userId: dto.userId, // Ensure userId is included
+  //           serviceProviders: {
+  //             connect: { id: dto.userId },
+  //           },
+  //         },
+  //       });
+
+  //         // if (!dto.clinicInfoDto)
+  //         // {
+  //         //   await this.prisma.clinicInfo.update{
+  //         //     where{ id: id, },
+              
+  //         //   }
+  //         // }
   
-        console.log('Schedule updated:', updatedSchedule);
-        return updatedSchedule;
-      } else {
-        // Create a new schedule if it doesn't exist
-        const newSchedule = await this.prisma.schedule.create({
-          data: {
-            id: updateSchedule.id,
-            date: updateSchedule.date,
-            dayOfWeek: updateSchedule.dayOfWeek,
-            isRecurring: updateSchedule.isRecurring,
-            recurrenceType: updateSchedule.recurrenceType,
-            startTime: updateSchedule.startTime,
-            endTime: updateSchedule.endTime,
-            slotDuration: updateSchedule.slotDuration,
-            location: updateSchedule.location,
-            isAvailable: updateSchedule.isAvailable,
-            service: updateSchedule.service,
-            status: updateSchedule.status,
-            providerId: updateSchedule.providerId, // Ensure providerId is included
-            userId: updateSchedule.userId, // Ensure userId is included
-            serviceProviders: {
-              connect: { id: updateSchedule.providerId },
-            },
-          },
-        });
-  
-        console.log('New schedule created:', newSchedule);
-        return newSchedule;
-      }
-    } catch (error) {
-      console.error('Error updating schedule:', error);
-      throw new InternalServerErrorException('Failed to update schedule');
-    }
-  }
+  //       console.log('New schedule created:', newSchedule);
+  //       return newSchedule;
+  //     }
+  //   } catch (error) {
+  //     console.error('Error updating schedule:', error);
+  //     throw new InternalServerErrorException('Failed to update schedule');
+  //   }
+  // }
+
 
 
 
   //get Provider by id
 
+  
+  async createOrUpdateSchedule(dto: UpdateScheduleDto) {
+    try {
+
+      // Check if the provider exists
+      const serviceProvider = await this.prisma.serviceProvider.findUnique({
+        where: { providerId: dto.providerId},
+      });
+      if (!serviceProvider) {
+        throw new NotFoundException(`Service provider with ID ${dto.providerId} not found`);
+      }
+      // Now use the provider's actual ID for the foreign key
+      const serviceProviderId = serviceProvider.providerId;
+
+      // Check if ID exists in the DTO
+      if (dto.id) {
+        const schedule = await this.prisma.schedule.findUnique({
+          where: { id: dto.id },
+        });
+  
+        if (schedule) {
+          // Update existing schedule
+          const updatedSchedule = await this.prisma.schedule.update({
+            where: { id: dto.id },
+            data: {
+              date: dto.date,
+              dayOfWeek: dto.dayOfWeek,
+              isRecurring: dto.isRecurring,
+              recurrenceType: dto.recurrenceType,
+              startTime: dto.startTime,
+              endTime: dto.endTime,
+              slotDuration: dto.slotDuration,
+              location: dto.location,
+              isAvailable: dto.isAvailable ?? true,
+              service: Array.isArray(dto.service) ? dto.service[0] : dto.service,
+              status: dto.status ?? 'ACTIVE',
+              serviceProviderId: serviceProviderId,
+              clinicInfo: dto.clinicInfoDto?.id ? {
+                connect: { id: dto.clinicInfoDto.id },
+              } : undefined,
+              updatedAt: new Date(),
+            },
+          });
+  
+          await this.generateSlots(updatedSchedule, dto.slotDuration);
+          return updatedSchedule;
+        }
+      }
+      
+      // If no ID provided or schedule with given ID doesn't exist, create new schedule
+      const newSchedule = await this.prisma.schedule.create({
+        data: {
+          date: dto.date,
+          dayOfWeek: dto.dayOfWeek,
+          isRecurring: dto.isRecurring,
+          recurrenceType: dto.recurrenceType,
+          startTime: dto.startTime,
+          endTime: dto.endTime,
+          slotDuration: dto.slotDuration,
+          location: dto.location,
+          isAvailable: dto.isAvailable ?? true,
+          service: Array.isArray(dto.service) ? dto.service[0] : dto.service,
+          status: dto.status ?? 'ACTIVE',
+          serviceProviderId: serviceProviderId,
+          userId: dto.userId,
+          clinicInfo: dto.clinicInfoDto?.id ? {
+            connect: { id: dto.clinicInfoDto.id },
+          } : undefined,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+      });
+  
+      await this.generateSlots(newSchedule, dto.slotDuration);
+      return newSchedule;
+    } catch (error) {
+      console.error('Error creating or updating schedule:', error);
+      throw new InternalServerErrorException('Failed to create or update schedule');
+    }
+  }
+
+  async generateSlots(schedule: Schedule, slotDuration: number) {
+    try {
+      const slots: Array<{
+        slotDate: Date | null;
+        startTime: Date;
+        endTime: Date;
+        isBooked: boolean;
+        scheduleId: string;
+        bookedAt: Date | null;
+        updatedAt: Date;
+      }> = [];
+      let currentTime = new Date(schedule.startTime);
+  
+      while (currentTime < new Date(schedule.endTime)) {
+        const slotEndTime = new Date(currentTime.getTime() + slotDuration * 60000);
+  
+        if (slotEndTime > new Date(schedule.endTime)) break;
+  
+        slots.push({
+          slotDate: schedule.date,
+          startTime: new Date(currentTime),
+          endTime: new Date(slotEndTime),
+          isBooked: false,
+          scheduleId: schedule.id,
+          bookedAt: null,
+          updatedAt: new Date(),
+        });
+  
+        currentTime = slotEndTime;
+      }
+  
+      await this.prisma.slot.createMany({ data: slots });
+      console.log('Slots generated successfully:', slots);
+    } catch (error) {
+      console.error('Error generating slots:', error);
+      throw new InternalServerErrorException('Failed to generate slots');
+    }
+  }
+
+  async bookAppointment(dto: BookAppointmentDto) {
+    try {
+      const slot = await this.prisma.slot.findUnique({
+        where: { id: dto.slotId },
+      });
+  
+      if (!slot || slot.isBooked) {
+        throw new BadRequestException('Slot is not available');
+      }
+  
+      const appointment = await this.prisma.appointment.create({
+        data: {
+          serviceProviderId: dto.serviceProviderId,
+          userId: dto.userId,
+          appointmentTime: dto.appointmentTime,
+          service: Array.isArray(dto.service) ? dto.service : [dto.service],
+          reason: dto.reason,
+          status: dto.status ?? 'PENDING',
+          isForOthers: dto.isForOthers ?? false,
+          slotId: dto.slotId,
+          patientId: dto.patientId,
+          bookedAt: new Date(),
+        },
+      });
+  
+      await this.prisma.slot.update({
+        where: { id: dto.slotId },
+        data: { isBooked: true },
+      });
+  
+      return appointment;
+    } catch (error) {
+      console.error('Error booking appointment:', error);
+      throw new InternalServerErrorException('Failed to book appointment');
+    }
+  }
+
+  
   async getProviderById(providerId: string) {
     try {
       const provider = await this.prisma.serviceProvider.findUnique({
@@ -193,6 +362,8 @@ export class ProviderService {
         where: {
           userId: userId, // Use userId to find the service provider
         },
+
+        
       });
   
       if (!provider) {
@@ -1143,7 +1314,7 @@ const homeAvailableSlots = homeNursing.schedule
     // Split the time into hours, minutes, and am/pm
     const [hourStr, minuteStr] = time.split(':');
     let hour = parseInt(hourStr, 10);
-    let minute = parseInt(minuteStr, 10);
+    const minute = parseInt(minuteStr, 10);
 
     // Adjust the hour for PM times
     if (time.toLowerCase().includes('pm') && hour !== 12) {
@@ -1157,52 +1328,52 @@ const homeAvailableSlots = homeNursing.schedule
 
   /////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  async bookAppointment(dto: AppointmentDto) {
-    try {
-      console.log('Booking appointment for:', dto.service);
+  // async bookAppointment(dto: AppointmentDto) {
+  //   try {
+  //     console.log('Booking appointment for:', dto.service);
   
-      // Check if the provider is available for the given schedule
-      const checkAvailability = await this.checkProviderAvailableShedule(
-        dto.serviceProviderId,
-        dto.appointmentTime.toISOString().split('T')[0], // Extract date from appointmentTime
-        dto.appointmentTime.toISOString().split('T')[1]?.slice(0, 5), // Extract time from appointmentTime
-        dto.service[0], // Assuming the first service type is used for availability check
-      );
+  //     // Check if the provider is available for the given schedule
+  //     const checkAvailability = await this.checkProviderAvailableShedule(
+  //       dto.serviceProviderId,
+  //       dto.appointmentTime.toISOString().split('T')[0], // Extract date from appointmentTime
+  //       dto.appointmentTime.toISOString().split('T')[1]?.slice(0, 5), // Extract time from appointmentTime
+  //       dto.service[0], // Assuming the first service type is used for availability check
+  //     );
   
-      console.log('Availability check result:', checkAvailability);
+  //     console.log('Availability check result:', checkAvailability);
   
-      if (!checkAvailability) {
-        throw new BadRequestException('Slot not available');
-      }
+  //     if (!checkAvailability) {
+  //       throw new BadRequestException('Slot not available');
+  //     }
 
-      if (!dto.slotId) {
-        throw new BadRequestException('Slot ID is required');
-      }
+  //     if (!dto.slotId) {
+  //       throw new BadRequestException('Slot ID is required');
+  //     }
   
-      // Create the appointment
-      const appointment = await this.prisma.appointment.create({
-        data: {
-          serviceProviderId: dto.serviceProviderId,
-          userId: dto.userId,
-          appointmentTime: dto.appointmentTime,
-          service: dto.service,
-          reason: dto.reason,
-          status: dto.status || 'PENDING', // Default to 'PENDING' if not provided
-          isForOthers: dto.isForOthers || false,
-          slotId: dto.slotId,
-          patientId: dto.patientId,
-          bookedAt: dto.bookedAt || new Date(),
-        },
-      });
+  //     // Create the appointment
+  //     const appointment = await this.prisma.appointment.create({
+  //       data: {
+  //         serviceProviderId: dto.serviceProviderId,
+  //         userId: dto.userId,
+  //         appointmentTime: dto.appointmentTime,
+  //         service: dto.service,
+  //         reason: dto.reason,
+  //         status: dto.status || 'PENDING', // Default to 'PENDING' if not provided
+  //         isForOthers: dto.isForOthers || false,
+  //         slotId: dto.slotId,
+  //         patientId: dto.patientId,
+  //         bookedAt: dto.bookedAt || new Date(),
+  //       },
+  //     });
   
-      console.log('Appointment created:', appointment);
+  //     console.log('Appointment created:', appointment);
   
-      return appointment;
-    } catch (error) {
-      console.error('Error booking appointment:', error);
-      throw new InternalServerErrorException('Internal Server Error');
-    }
-  }
+  //     return appointment;
+  //   } catch (error) {
+  //     console.error('Error booking appointment:', error);
+  //     throw new InternalServerErrorException('Internal Server Error');
+  //   }
+  // }
    ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
    async IntegratedBookAppointment(dto: integratedBookAppointmentDTO) {
