@@ -420,4 +420,3 @@ Each error response includes:
   "error": string
 }
 ```
-````
