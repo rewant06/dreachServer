@@ -17,6 +17,7 @@ export class AdminService {
         select: {
           name: true,
           providerId: true,
+          id: true,
           service: true,
           specialization: true,
           userId: true,

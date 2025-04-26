@@ -288,7 +288,7 @@ export class ProviderService {
       // Find the service provider by userId
       const provider = await this.prisma.serviceProvider.findUnique({
         where: {
-          userId: userId, // Use userId to find the service provider
+          userId: userId, 
         },
 
         

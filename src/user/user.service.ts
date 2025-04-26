@@ -91,67 +91,6 @@ export class UserService {
     }
   }
 
-  // async updateUsersProfile(serviceProvider: UpdateUserDetailsDto) {
-  //   // Check if the user exists
-  //   const user = await this.prisma.user.findUnique({
-  //     where: {
-  //       id: serviceProvider.userId,
-  //     },
-  //   });
-
-  //   if (!user) throw new NotFoundException('User not found');
-
-  //   // Prepare the update data
-  //   const updateData: {
-  //     name?: string;
-  //     specialization?: string[];
-  //     fee?: number;
-  //     experience?: number;
-  //     description?: string;
-  //     address?: {
-  //       update: {
-  //         address: string;
-  //         city: string;
-  //         state: string;
-  //         country: string;
-  //         pincode: string;
-  //       };
-  //     };
-  //   } = {
-  //     name: serviceProvider.name,
-  //     specialization: serviceProvider.specialization,
-  //     fee: serviceProvider.fee,
-  //     experience: serviceProvider.experience,
-  //     description: serviceProvider.description,
-  //   };
-
-  //   // Handle address update if provided
-  //   if (serviceProvider.address) {
-  //     updateData.address = {
-  //       update: {
-  //         address: serviceProvider.address.address,
-  //         city: serviceProvider.address.city,
-  //         state: serviceProvider.address.state,
-  //         country: serviceProvider.address.country,
-  //         pincode: serviceProvider.address.pincode,
-  //       },
-  //     };
-  //   }
-
-  //   // Update the ServiceProvider
-  //   const updatedServiceProvider = await this.prisma.serviceProvider.update({
-  //     where: {
-  //       id: serviceProvider.userId, // Ensure `id` corresponds to the ServiceProvider model's unique identifier
-  //     },
-  //     data: updateData,
-  //   });
-
-  //   if (!updatedServiceProvider)
-  //     throw new InternalServerErrorException('Something went wrong');
-
-  //   return updatedServiceProvider;
-  // }
-
   async generateMediaId() {
     return await this.storageService.generateMediaId();
   }
@@ -735,8 +674,115 @@ export class UserService {
     return s;
   }
 
+  async getSchedule(userId: string) {
+      try {
+        // Find the service provider by userId
+        const provider = await this.prisma.serviceProvider.findUnique({
+          where: {
+            userId: userId, 
+          },
+  
+          
+        });
+    
+        if (!provider) {
+          throw new NotFoundException('Service provider not found');
+        }
+    
+        // Fetch schedules for all services
+        const schedules = await this.prisma.schedule.findMany({
+          where: {
+            serviceProviderId: provider.id, // Use the provider's ID to find schedules
+          },
+          include: {
+            slots: true, // Include slots for each schedule
+          },
+        });
+    
+        if (!schedules || schedules.length === 0) {
+          // Return default response if no schedules are found
+          return {
+            serviceProvider: {
+              services: {
+                HomeCare: [],
+                VideoConsultation: [],
+                OndeskAppointment: [],
+                IntegratedCare: [],
+                CollaborativeCare: [],
+                LabTest: [],
+              },
+            },
+          };
+        }
+    
+        // Organize schedules by service type
+        const organizedSchedules: Record<string, Array<{
+          id: string;
+          date: Date | null;
+          dayOfWeek: string | null;
+          isRecurring: boolean;
+          recurrenceType: string | null;
+          startTime: Date;
+          endTime: Date;
+          slotDuration: number;
+          location: string;
+          isAvailable: boolean;
+          status: string;
+          slots: Array<{
+            id: string;
+            startTime: Date;
+            endTime: Date;
+            isAvailable: boolean;
+          }>;
+        }>> = {
+          HomeCare: [],
+          VideoConsultation: [],
+          OndeskAppointment: [],
+          IntegratedCare: [],
+          CollaborativeCare: [],
+          LabTest: [],
+        };
+    
+        schedules.forEach((schedule) => {
+          if (schedule.service in organizedSchedules) {
+            organizedSchedules[schedule.service].push({
+              id: schedule.id,
+              date: schedule.date,
+              dayOfWeek: schedule.dayOfWeek,
+              isRecurring: schedule.isRecurring,
+              recurrenceType: schedule.recurrenceType,
+              startTime: schedule.startTime,
+              endTime: schedule.endTime,
+              slotDuration: schedule.slotDuration,
+              location: schedule.location,
+              isAvailable: schedule.isAvailable,
+              status: schedule.status,
+              slots: schedule.slots.map(slot => ({
+                id: slot.id,
+                startTime: slot.startTime,
+                endTime: slot.endTime,
+                isAvailable: !slot.isBooked, // Assuming isAvailable is the inverse of isBooked
+              })),
+            });
+          }
+        });
+    
+        console.log('Schedules found:', organizedSchedules);
+    
+        return {
+          serviceProvider: {
+            services: organizedSchedules,
+          },
+        };
+      } catch (error) {
+        console.error('Error fetching schedule:', error);
+        throw new InternalServerErrorException('Failed to fetch schedule');
+      }
+    }
+
   async getSlotsByVideoConsult(
-    username: string,
+    username?: string,
+    id?: string,
     userId?: string,
     date?: string,
     slots?: string,
@@ -746,7 +792,7 @@ export class UserService {
       const serviceProvider = await this.prisma.serviceProvider.findFirst({
         where: {
           user: {
-            username: username,
+            id: id,
           },
           providerType: 'Doctor', // Ensure the provider is a doctor
         },
@@ -755,8 +801,10 @@ export class UserService {
         },
       });
 
-      if (!serviceProvider)
-        throw new UnauthorizedException('Unauthorized Access');
+      if (!serviceProvider) {
+      console.error('Service provider not found for the given parameters');
+      throw new NotFoundException('Service provider not found');
+    }
 
       if (!serviceProvider)
         throw new UnauthorizedException('Unauthorized Access');

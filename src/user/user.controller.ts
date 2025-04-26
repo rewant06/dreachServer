@@ -8,6 +8,7 @@ import {
   UploadedFile,
   UseInterceptors,
   BadRequestException,
+  InternalServerErrorException,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import {
@@ -154,6 +155,14 @@ export class UserController {
       userId: user.userId,
     };
   }
+
+
+  @Get('getSchedule/:userId')
+  async getSchedule(@Param(('userId')) userId: string) {
+    console.log(userId);
+    return this.userService.getSchedule(userId);
+  }
+
 }
 
 // function findServiceProvidersByHomeVisit() {
