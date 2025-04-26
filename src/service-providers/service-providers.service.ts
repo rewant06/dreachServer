@@ -757,6 +757,11 @@ export class ProviderService {
       if (!doctor) throw new UnauthorizedException('Unauthorized Access');
   
       const selectedDate = new Date(selectedDateByClient);
+
+
+
+
+      
       const isoDate = formatISO(selectedDate); // Convert to ISO format
   
       console.log(selectedDate, selectedDateByClient, isoDate);
@@ -852,7 +857,7 @@ export class ProviderService {
     providerId: string,
     date: string,
     slot: string,
-    service: Service, // Use the Service enum
+    service: Service, 
   ) {
     try {
       console.log(`Checking availability for provider: ${providerId}, date: ${date}, slot: ${slot}, service: ${service}`);
