@@ -9,6 +9,7 @@ import {
   UseInterceptors,
   BadRequestException,
   InternalServerErrorException,
+  Delete,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import {
@@ -49,6 +50,11 @@ export class UserController {
     console.log(file, address, res);
 
     return this.userService.updateUsersProfile({ address, ...res }, file);
+  }
+
+  @Delete('/:userId')
+  async deleteUser(@Param('userId') userId: string) {
+    return this.userService.deleteUser(userId);
   }
 
   @Post('applyForServiceProvider')
