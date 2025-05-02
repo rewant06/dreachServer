@@ -122,62 +122,73 @@ export class UserService {
     try {
       // First check if the user exists
       const user = await this.prisma.user.findUnique({
-        where: { userId },
-        include: {
-          serviceProvider: true,
-          address: true,
-        },
+        where: { userId }
+        // include: {
+        //   serviceProvider: true,
+        //   address: true,
+        // },
       });
 
       if (!user) {
         throw new NotFoundException(`User with ID ${userId} not found`);
       }
+      console.log("THE UESR IS ", user)
 
       // Start a transaction to delete related records
-      await this.prisma.$transaction(async (prisma) => {
-        // Delete user profile if exists
-        if (user.userId) {
-          try {
-            await prisma.user.update({
-              where: { id: user.userId }, // Use user ID
-              data: {
-                isDeleted: true,
-                isActive: false,
-                isVerified: false,
-              }
-            });
-          } catch (error) {
-            console.log('User deleted successfully');
-            // Continue with other deletions even if service provider deletion fails
-          }
+      // await this.prisma.$transaction(async () => {
+      //   // Delete user profile if exists
+      //   if (user.userId) {
+      //     try {
+      //       await this.prisma.user.update({
+      //         where: { id: userId }, // Use user ID
+      //         data: {
+      //           isDeleted: true,
+      //           isActive: false,
+      //           isVerified: false,
+      //         }
+      //       });
+      //     } catch (error) {
+      //       console.log('User deleted successfully');
+      //       // Continue with other deletions even if service provider deletion fails
+      //     }
+      //   }
+
+      // Delete address if exists
+      // if (user.address) {
+      //   try {
+      //     await prisma.address.delete({
+      //       where: { id: user.address.id }, // Use address ID instead of user ID
+      //     });
+      //   } catch (error) {
+      //     console.log('Address deletion successful');
+      //     // Continue with other deletions even if address deletion fails
+      //   }
+      // }
+
+      // Delete the user's appointments
+      // await prisma.appointment.deleteMany({
+      //   where: { userId: user.id },
+      // });
+
+      // Delete the user's reviews/ratings
+      // await prisma.rating.deleteMany({
+      //   where: { userId: user.id },
+      // });
+
+      // Finally delete the user
+      // await prisma.user.delete({
+      //   where: { userId },
+      // });
+      // });
+
+      // userId
+      await this.prisma.user.update({
+        where: { id: user.id },
+        data: {
+          isDeleted: true,
+          isActive: false,
+          isVerified: false
         }
-
-        // Delete address if exists
-        // if (user.address) {
-        //   try {
-        //     await prisma.address.delete({
-        //       where: { id: user.address.id }, // Use address ID instead of user ID
-        //     });
-        //   } catch (error) {
-        //     console.log('Address deletion successful');
-        //     // Continue with other deletions even if address deletion fails
-        //   }
-        // }
-
-        // Delete the user's appointments
-        // await prisma.appointment.deleteMany({
-        //   where: { userId: user.id },
-        // });
-
-        // Delete the user's reviews/ratings
-        // await prisma.rating.deleteMany({
-        //   where: { userId: user.id },
-        // });
-
-        // Finally delete the user
-        // await prisma.user.delete({
-        //   where: { userId },
-        // });
       });
 
       return {

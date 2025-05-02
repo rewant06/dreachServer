@@ -10,6 +10,7 @@ import {
   BadRequestException,
   InternalServerErrorException,
   Delete,
+  Put,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import {
@@ -52,7 +53,7 @@ export class UserController {
     return this.userService.updateUsersProfile({ address, ...res }, file);
   }
 
-  @Delete('/:userId')
+  @Put('/delete/:userId')
   async deleteUser(@Param('userId') userId: string) {
     return this.userService.deleteUser(userId);
   }
