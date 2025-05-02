@@ -489,7 +489,7 @@ export class UserService {
           bloodGroup,
           phone,
           profilePic,
-          isVerified,
+          isVerified: true,
         },
       });
 

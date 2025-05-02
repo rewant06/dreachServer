@@ -43,6 +43,7 @@ export class AdminService {
           createdAt: true,
           updatedAt: true,
           address: true,
+          isVerified: true,
         },
       });
   
