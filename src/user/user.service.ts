@@ -117,6 +117,76 @@ export class UserService {
     return await this.storageService.generateMediaId();
   }
 
+  // Delete user
+  async deleteUser(userId: string) {
+    try {
+      // First check if the user exists
+      const user = await this.prisma.user.findUnique({
+        where: { userId },
+        include: {
+          serviceProvider: true,
+          address: true,
+        },
+      });
+
+      if (!user) {
+        throw new NotFoundException(`User with ID ${userId} not found`);
+      }
+
+      // Start a transaction to delete related records
+      await this.prisma.$transaction(async (prisma) => {
+        // Delete user profile if exists
+        if (user.userId) {
+          try {
+            await prisma.user.delete({
+              where: { id: user.userId }, // Use user ID
+            });
+          } catch (error) {
+            console.log('User deleted successfully');
+            // Continue with other deletions even if service provider deletion fails
+          }
+        }
+
+        // Delete address if exists
+        if (user.address) {
+          try {
+            await prisma.address.delete({
+              where: { id: user.address.id }, // Use address ID instead of user ID
+            });
+          } catch (error) {
+            console.log('Address deletion successful');
+            // Continue with other deletions even if address deletion fails
+          }
+        }
+
+        // Delete the user's appointments
+        await prisma.appointment.deleteMany({
+          where: { userId: user.id },
+        });
+
+        // Delete the user's reviews/ratings
+        await prisma.rating.deleteMany({
+          where: { userId: user.id },
+        });
+
+        // Finally delete the user
+        await prisma.user.delete({
+          where: { userId },
+        });
+      });
+
+      return {
+        message: `User ${userId} and all associated data have been deleted successfully`,
+      };
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      console.error('Error deleting user:', error);
+      throw new InternalServerErrorException('Failed to delete user');
+    }
+  }
+
   async uploadProviderProfile(
     dto: UpdateUserDetailsDto,
     file?: Express.Multer.File,
@@ -438,9 +508,20 @@ export class UserService {
 
   async getUserById(userId: string) {
     try {
+      const user = await this.prisma.user.findUnique({
+        where: { userId },
+        include: {
+          serviceProvider: true,
+          address: true,
+        },
+      });
+
+      if (!user) {
+        throw new NotFoundException(`User with ID ${userId} not found`);
+      }
       return await this.prisma.user.findUnique({
         where: {
-          id: userId,
+          userId,
         },
         include: {
           serviceProvider: {
@@ -469,7 +550,6 @@ export class UserService {
           email: email,
         },
         select: {
-          
           id: true,
           email: true,
           name: true,
@@ -699,48 +779,48 @@ export class UserService {
   }
 
   async getSchedule(userId: string) {
-      try {
-        // Find the service provider by userId
-        const provider = await this.prisma.serviceProvider.findUnique({
-          where: {
-            userId: userId, 
-          },
-  
-          
-        });
-    
-        if (!provider) {
-          throw new NotFoundException('Service provider not found');
-        }
-    
-        // Fetch schedules for all services
-        const schedules = await this.prisma.schedule.findMany({
-          where: {
-            serviceProviderId: provider.id, // Use the provider's ID to find schedules
-          },
-          include: {
-            slots: true, // Include slots for each schedule
-          },
-        });
-    
-        if (!schedules || schedules.length === 0) {
-          // Return default response if no schedules are found
-          return {
-            serviceProvider: {
-              services: {
-                HomeCare: [],
-                VideoConsultation: [],
-                OndeskAppointment: [],
-                IntegratedCare: [],
-                CollaborativeCare: [],
-                LabTest: [],
-              },
+    try {
+      // Find the service provider by userId
+      const provider = await this.prisma.serviceProvider.findUnique({
+        where: {
+          userId: userId,
+        },
+      });
+
+      if (!provider) {
+        throw new NotFoundException('Service provider not found');
+      }
+
+      // Fetch schedules for all services
+      const schedules = await this.prisma.schedule.findMany({
+        where: {
+          serviceProviderId: provider.id, // Use the provider's ID to find schedules
+        },
+        include: {
+          slots: true, // Include slots for each schedule
+        },
+      });
+
+      if (!schedules || schedules.length === 0) {
+        // Return default response if no schedules are found
+        return {
+          serviceProvider: {
+            services: {
+              HomeCare: [],
+              VideoConsultation: [],
+              OndeskAppointment: [],
+              IntegratedCare: [],
+              CollaborativeCare: [],
+              LabTest: [],
             },
-          };
-        }
-    
-        // Organize schedules by service type
-        const organizedSchedules: Record<string, Array<{
+          },
+        };
+      }
+
+      // Organize schedules by service type
+      const organizedSchedules: Record<
+        string,
+        Array<{
           id: string;
           date: Date | null;
           dayOfWeek: string | null;
@@ -758,51 +838,52 @@ export class UserService {
             endTime: Date;
             isAvailable: boolean;
           }>;
-        }>> = {
-          HomeCare: [],
-          VideoConsultation: [],
-          OndeskAppointment: [],
-          IntegratedCare: [],
-          CollaborativeCare: [],
-          LabTest: [],
-        };
-    
-        schedules.forEach((schedule) => {
-          if (schedule.service in organizedSchedules) {
-            organizedSchedules[schedule.service].push({
-              id: schedule.id,
-              date: schedule.date,
-              dayOfWeek: schedule.dayOfWeek,
-              isRecurring: schedule.isRecurring,
-              recurrenceType: schedule.recurrenceType,
-              startTime: schedule.startTime,
-              endTime: schedule.endTime,
-              slotDuration: schedule.slotDuration,
-              location: schedule.location,
-              isAvailable: schedule.isAvailable,
-              status: schedule.status,
-              slots: schedule.slots.map(slot => ({
-                id: slot.id,
-                startTime: slot.startTime,
-                endTime: slot.endTime,
-                isAvailable: !slot.isBooked, // Assuming isAvailable is the inverse of isBooked
-              })),
-            });
-          }
-        });
-    
-        console.log('Schedules found:', organizedSchedules);
-    
-        return {
-          serviceProvider: {
-            services: organizedSchedules,
-          },
-        };
-      } catch (error) {
-        console.error('Error fetching schedule:', error);
-        throw new InternalServerErrorException('Failed to fetch schedule');
-      }
+        }>
+      > = {
+        HomeCare: [],
+        VideoConsultation: [],
+        OndeskAppointment: [],
+        IntegratedCare: [],
+        CollaborativeCare: [],
+        LabTest: [],
+      };
+
+      schedules.forEach((schedule) => {
+        if (schedule.service in organizedSchedules) {
+          organizedSchedules[schedule.service].push({
+            id: schedule.id,
+            date: schedule.date,
+            dayOfWeek: schedule.dayOfWeek,
+            isRecurring: schedule.isRecurring,
+            recurrenceType: schedule.recurrenceType,
+            startTime: schedule.startTime,
+            endTime: schedule.endTime,
+            slotDuration: schedule.slotDuration,
+            location: schedule.location,
+            isAvailable: schedule.isAvailable,
+            status: schedule.status,
+            slots: schedule.slots.map((slot) => ({
+              id: slot.id,
+              startTime: slot.startTime,
+              endTime: slot.endTime,
+              isAvailable: !slot.isBooked, // Assuming isAvailable is the inverse of isBooked
+            })),
+          });
+        }
+      });
+
+      console.log('Schedules found:', organizedSchedules);
+
+      return {
+        serviceProvider: {
+          services: organizedSchedules,
+        },
+      };
+    } catch (error) {
+      console.error('Error fetching schedule:', error);
+      throw new InternalServerErrorException('Failed to fetch schedule');
     }
+  }
 
   async getSlotsByVideoConsult(
     username?: string,
@@ -826,9 +907,9 @@ export class UserService {
       });
 
       if (!serviceProvider) {
-      console.error('Service provider not found for the given parameters');
-      throw new NotFoundException('Service provider not found');
-    }
+        console.error('Service provider not found for the given parameters');
+        throw new NotFoundException('Service provider not found');
+      }
 
       if (!serviceProvider)
         throw new UnauthorizedException('Unauthorized Access');
