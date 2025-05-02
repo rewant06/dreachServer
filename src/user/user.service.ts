@@ -60,29 +60,51 @@ export class UserService {
           },
         },
       });
-
+  
       // If the user already exists, return the existing user
       if (existingUser) return existingUser;
-
+  
+      // Generate a unique userId
+      let userId = `PT-${this.utils.generateRandomString(5)}`;
+      let isUserIdUnique = false;
+  
+      while (!isUserIdUnique) {
+        const existingUserId = await this.prisma.user.findUnique({
+          where: { userId },
+        });
+        if (!existingUserId) {
+          isUserIdUnique = true; // userId is unique
+        } else {
+          userId = `PT-${this.utils.generateRandomString(5)}`; // Regenerate userId
+        }
+      }
+  
       // Generate a base username from the email
       const baseUsername = email.split('@')[0];
       let username = baseUsername + this.utils.generateRandomString(3);
-
-      // Ensure the username is unique
-      while (await this.isUsernameTaken(username)) {
-        username = baseUsername + this.utils.generateRandomString(3);
+      let isUsernameUnique = false;
+  
+      while (!isUsernameUnique) {
+        const existingUsername = await this.prisma.user.findUnique({
+          where: { username },
+        });
+        if (!existingUsername) {
+          isUsernameUnique = true; // username is unique
+        } else {
+          username = baseUsername + this.utils.generateRandomString(3); // Regenerate username
+        }
       }
-
+  
       // Create the new user
       const newUser = await this.prisma.user.create({
         data: {
           email: email,
           role: 'Patient',
-          userId: `PT-${this.utils.generateRandomString(5)}`, // Generate a unique userId
+          userId: userId, // Use the unique userId
           username: username, // Use the unique username
         },
       });
-
+  
       // Return the newly created user
       return newUser;
     } catch (error) {
@@ -227,7 +249,7 @@ export class UserService {
           prefix = 'LAB';
           break;
         default:
-          prefix = 'RI'; // Default prefix if providerType doesn't match any case
+          prefix = 'RI'; 
       }
 
       const providerId = `${prefix}-${Math.random().toString(36).substring(2, 9).toUpperCase()}`;
@@ -295,7 +317,7 @@ export class UserService {
     try {
       console.log('Received userId:', users.userId); // Debug log
 
-      const { name, dob, gender, bloodGroup, address, phone } = users;
+      const { name, dob, gender, bloodGroup, address, phone, isVerified } = users;
 
       // Check if the user exists
       const user = await this.prisma.user.findUnique({
@@ -397,6 +419,7 @@ export class UserService {
           bloodGroup,
           phone,
           profilePic,
+          isVerified,
         },
       });
 
@@ -422,6 +445,7 @@ export class UserService {
         include: {
           serviceProvider: {
             select: {
+              name: true,
               specialization: true,
               fee: true,
               experience: true,

@@ -130,6 +130,10 @@ export class UpdateUserDetailsDto {
 
   @IsString()
 userId: string; // User ID to identify the service provider
+
+@IsBoolean()
+  @IsOptional()
+  isVerified: boolean;
 }
 
 
@@ -165,6 +169,10 @@ export class UpdatePatientsDetailsDto {
   @IsOptional()
   @IsString()
   phone?: string;
+  
+  @IsBoolean()
+  @IsOptional()
+  isVerified: boolean;
 }
 
 

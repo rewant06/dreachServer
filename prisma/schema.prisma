@@ -7,24 +7,7 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// model Employee{
-//   id Int @id @default(autoincrement())
-//   name String 
-//   email String @unique
-//   role Role
-//   createdAt DateTime  @default(now())
-//   updatedAt DateTime  @updatedAt
-// }
 
-// enum Role {
-//   ADMIN
-//   PATIENT
-//   DOCTOR
-//   HOSPITAL 
-// }
-
-
-//Enums
 
 enum UserRole {
   Patient
@@ -173,6 +156,7 @@ model User {
   bloodGroup        BloodGroup?
   address           Address? 
   isActive          Boolean  @default(true) 
+  isVerified        Boolean  @default(false)
   profilePic        String? 
   createdAt         DateTime @default(now()) 
   updatedAt         DateTime @updatedAt 
