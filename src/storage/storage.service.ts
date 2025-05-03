@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { S3Client, PutObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3';
+import { S3Client, PutObjectCommand, DeleteObjectCommand, ListBucketsCommand, ListBucketsCommandOutput  } from '@aws-sdk/client-s3';
 import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
@@ -105,4 +105,51 @@ export class StorageService {
       throw new Error('Failed to delete file from S3');
     }
   }
+
+
+  async checkS3Connection(): Promise<void> {
+    try {
+      const command = new ListBucketsCommand({});
+      const response: ListBucketsCommandOutput = await this.s3.send(command);
+      this.logger.log('S3 is working. Buckets:', response.Buckets);
+    } catch (error) {
+      this.logger.error('Error connecting to S3:', error.stack);
+      throw new Error('Failed to connect to S3');
+    }
+  }
+
+  async uploadProfilePicManually(): Promise<void> {
+    try {
+      const fs = require('fs');
+      const path = require('path');
+  
+      // Specify the file path
+      const filePath = 'C:\\Users\\rewan\\Desktop\\HelpingBots\\DreachServer\\server\\assets\\Aditya.jpeg';
+  
+      // Read the file from the specified directory
+      const fileBuffer = fs.readFileSync(filePath);
+      const fileName = path.basename(filePath); // Extract the file name from the path
+  
+      // Define the S3 key (directory in the bucket)
+      const key = `user/profilePic/${fileName}`;
+  
+      // Create the PutObjectCommand to upload the file
+      const command = new PutObjectCommand({
+        Bucket: this.bucketName,
+        Key: key,
+        Body: fileBuffer,
+        ContentType: 'image/jpeg', // Adjust the content type as needed
+      });
+  
+      // Upload the file to S3
+      await this.s3.send(command);
+  
+      this.logger.log(`Profile picture uploaded successfully: ${key}`);
+    } catch (error) {
+      this.logger.error('Error uploading profile picture to S3:', error.stack);
+      throw new Error('Failed to upload profile picture to S3');
+    }
+  }
+  
+
 }

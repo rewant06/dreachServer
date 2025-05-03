@@ -18,8 +18,8 @@ import {
 } from './dto/user.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Service, ProviderType } from '@prisma/client';
+import { memoryStorage } from 'multer';
 
-// Define the file filter for validating uploaded files
 const fileFilter = (req, file, callback) => {
   if (!file.mimetype.match(/\/(jpg|jpeg|png|webp)$/)) {
     return callback(
@@ -40,16 +40,31 @@ export class UserController {
     return await this.userService.createUser(email);
   }
 
+  // @Post('updateUser')
+  // @UseInterceptors(FileInterceptor('profilePic', { fileFilter }))
+  // async updateUsersProfile(
+  //   @UploadedFile() file: Express.Multer.File,
+  //   @Body() dto: UpdatePatientsDetailsDto,
+  // ) {
+  //   const { address, ...res } = dto;
+  //   console.log(file, address, res);
+
+  //   return this.userService.updateUsersProfile({ address, ...res }, file);
+  // }
+
   @Post('updateUser')
-  @UseInterceptors(FileInterceptor('profileImage', { fileFilter }))
+  @UseInterceptors(FileInterceptor('profilePic', { storage: memoryStorage() }))
   async updateUsersProfile(
     @UploadedFile() file: Express.Multer.File,
     @Body() dto: UpdatePatientsDetailsDto,
   ) {
+    console.log('Received address:', dto.address); // Debug log
+    const parsedAddress = typeof dto.address === 'string' ? JSON.parse(dto.address) : dto.address;
+    console.log('Parsed address:', parsedAddress);
     const { address, ...res } = dto;
     console.log(file, address, res);
 
-    return this.userService.updateUsersProfile({ address, ...res }, file);
+    return this.userService.updateUsersProfile({  address: parsedAddress, ...res }, file);
   }
 
   @Delete('/:userId')
