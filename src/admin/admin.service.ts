@@ -22,6 +22,7 @@ export class AdminService {
           specialization: true,
           userId: true,
           status: true,
+          
         },
       });
   
@@ -44,6 +45,7 @@ export class AdminService {
           updatedAt: true,
           address: true,
           isVerified: true,
+          isDeleted: true,
         },
       });
   

@@ -7,8 +7,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-
-
 enum UserRole {
   Patient
   SuperAdmin
@@ -17,7 +15,7 @@ enum UserRole {
   Hospital
   Lab
   Nursing
-  DoctorsAssistant 
+  DoctorsAssistant
 }
 
 enum Gender {
@@ -82,7 +80,6 @@ enum BloodGroup {
   AB_NEGATIVE
 }
 
-
 enum Service {
   HomeCare
   VideoConsultation
@@ -92,8 +89,6 @@ enum Service {
   LabTest
 }
 
-
-
 enum PaymentMethod {
   UPI
   CARD
@@ -101,8 +96,6 @@ enum PaymentMethod {
   CASH
   WALLET
 }
-
-
 
 enum PermissionType {
   ACCEPT
@@ -144,100 +137,98 @@ enum RecurrenceType {
 // Core Models
 //
 model User {
-  id                String   @id @default(cuid()) 
-  userId            String          @unique
-  username          String?  @unique 
-  name              String? 
-  email             String   @unique
-  phone             String? 
-  role              UserRole 
-  gender            Gender?
-  dob               DateTime? 
-  bloodGroup        BloodGroup?
-  address           Address? 
-  isActive          Boolean  @default(true) 
-  isVerified        Boolean  @default(false)
-  profilePic        String? 
-  createdAt         DateTime @default(now()) 
-  updatedAt         DateTime @updatedAt 
-  isDeleted         Boolean  @default(false) 
+  id         String      @id @default(cuid())
+  userId     String      @unique
+  username   String?     @unique
+  name       String?
+  email      String      @unique
+  phone      String?
+  role       UserRole
+  gender     Gender?
+  dob        DateTime?
+  bloodGroup BloodGroup?
+  address    Address?
+  isActive   Boolean     @default(true)
+  isVerified Boolean     @default(false)
+  profilePic String?
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+  isDeleted  Boolean     @default(false)
 
-  patient           Patient[] 
-  doctor            Doctor? 
-  superAdmin        SuperAdmin? 
-  admin             Admin?
-  lab               Lab? 
-  hospital          Hospital?
-  nursing           Nursing? 
-  doctorsAssistant  DoctorsAssistant? 
-  payments          Payment[] 
-  medicalRecords    MedicalRecord[] 
-  appointments      Appointment[] 
-  ratings           Rating[]
-  notifications     Notification[]
-  auditLogs         AuditLog[] 
-  serviceProvider   ServiceProvider[]
+  patient          Patient[]
+  doctor           Doctor?
+  superAdmin       SuperAdmin?
+  admin            Admin?
+  lab              Lab?
+  hospital         Hospital?
+  nursing          Nursing?
+  doctorsAssistant DoctorsAssistant?
+  payments         Payment[]
+  medicalRecords   MedicalRecord[]
+  appointments     Appointment[]
+  ratings          Rating[]
+  notifications    Notification[]
+  auditLogs        AuditLog[]
+  serviceProvider  ServiceProvider[]
 }
 
 // Patient Model
 
 model Patient {
-  id                String   @id @default(cuid())
-  age               String
-  userId            String  
-  user              User     @relation(fields: [userId], references: [id])
- 
-  conditions        String[]
-  allergies         Allergy[]
-  bloodGroup        BloodGroup
-  treatmentPlans    TherapyPlan[]
-  appointment       Appointment[]
-  prescriptions     Prescription[]
-  labResults        LabResult[]
-  adminPanelId String
-  adminPanel   AdminPanel @relation(fields: [adminPanelId], references: [id], onDelete: Cascade) // Required relation to AdminPanel
-  tags              Tag[] @relation("PatientTags")
-}
+  id     String @id @default(cuid())
+  age    String
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
 
+  conditions     String[]
+  allergies      Allergy[]
+  bloodGroup     BloodGroup
+  treatmentPlans TherapyPlan[]
+  appointment    Appointment[]
+  prescriptions  Prescription[]
+  labResults     LabResult[]
+  adminPanelId   String
+  adminPanel     AdminPanel     @relation(fields: [adminPanelId], references: [id], onDelete: Cascade) // Required relation to AdminPanel
+  tags           Tag[]          @relation("PatientTags")
+}
 
 //
 // Admin Models
 //
 model AdminPanel {
-  id                String   @id @default(cuid())
-  userId            String   @unique
+  id                String            @id @default(cuid())
+  userId            String            @unique
   permissions       ActionType[]
-  canManageUsers    Boolean @default(true)
-  canManagePayments Boolean @default(true)
-  canManageReports  Boolean @default(true)
+  canManageUsers    Boolean           @default(true)
+  canManagePayments Boolean           @default(true)
+  canManageReports  Boolean           @default(true)
   serviceProvider   ServiceProvider[]
-  patient          Patient[]
+  patient           Patient[]
 
-  superAdminId    SuperAdmin[]
-  adminId         Admin[]
-  
+  superAdminId SuperAdmin[]
+  adminId      Admin[]
 }
 
 model SuperAdmin {
-  id                String   @id @default(cuid())
-  userId            String   @unique
-  user              User     @relation(fields: [userId], references: [id])
-  permissions       String[]
-  status            Status
-  
-  admin            Admin[]
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  user        User     @relation(fields: [userId], references: [id])
+  permissions String[]
+  status      Status
+
+  admin        Admin[]
   adminPanelId String
   adminPanel   AdminPanel @relation(fields: [adminPanelId], references: [id]) // Required relation to AdminPanel
 }
 
 model Admin {
-  id                String   @id @default(cuid())
-  userId            String   @unique
-  user              User     @relation(fields: [userId], references: [id])
-  permissions       String[]
-  canManageProviders Boolean @default(true)
-  canViewAllTransactions Boolean @default(true)
-  canViewAllAppointments Boolean @default(true)
+  id                     String   @id @default(cuid())
+  userId                 String   @unique
+  user                   User     @relation(fields: [userId], references: [id])
+  permissions            String[]
+  canManageProviders     Boolean  @default(true)
+  canViewAllTransactions Boolean  @default(true)
+  canViewAllAppointments Boolean  @default(true)
 
   adminPanelId String
   adminPanel   AdminPanel @relation(fields: [adminPanelId], references: [id]) // Required relation to AdminPanel
@@ -250,436 +241,422 @@ model Admin {
 //
 
 model ServiceProvider {
-  id                String   @id @default(cuid()) // Unique identifier for the service provider
-  providerId        String   @unique // Unique ID for the service provider
-  name              String   // Name of the service provider (e.g., Doctor, Hospital)
-  age               Int?
-  dob               DateTime?
-  providerType      ProviderType // Enum to define the type of provider (e.g., DOCTOR, HOSPITAL)
-  specialization    String[] 
-  fee               Float?
-  experience        Int?
-  description       String?
-  service           Service[]
-  status            Status @default(PENDING) // Enum to track the status of the service provider (e.g., PENDING, APPROVED)
-  schedule          Schedule[]
-  appointment       Appointment[]
-  education         Education[]  
-  workExperience    WorkExperience[]
-  awards            Award[]
-  labResults        LabResult[]
-  therapyPlans      TherapyPlan[]
-  document         String?
+  id                 String           @id @default(cuid()) // Unique identifier for the service provider
+  providerId         String           @unique // Unique ID for the service provider
+  name               String // Name of the service provider (e.g., Doctor, Hospital)
+  age                Int?
+  dob                DateTime?
+  providerType       ProviderType // Enum to define the type of provider (e.g., DOCTOR, HOSPITAL)
+  specialization     String[]
+  fee                Float?
+  experience         Int?
+  description        String?
+  service            Service[]
+  status             Status           @default(PENDING) // Enum to track the status of the service provider (e.g., PENDING, APPROVED)
+  schedule           Schedule[]
+  appointment        Appointment[]
+  education          Education[]
+  workExperience     WorkExperience[]
+  awards             Award[]
+  labResults         LabResult[]
+  therapyPlans       TherapyPlan[]
+  document           String?
   registrationNumber String?
-  rating            Rating[]
+  rating             Rating[]
 
-  medicalRecords    MedicalRecord[]
-  doctor            Doctor[]
-  clinicInfoId String? // Optional foreign key for the ClinicInfo
-  clinicInfo   ClinicInfo? @relation(fields: [clinicInfoId], references: [id]) // Optional relation to ClinicInfo
-  adminPanelId String?
-  adminPanel   AdminPanel? @relation(fields: [adminPanelId], references: [id], onDelete: Cascade) // Required relation to AdminPanel
-  tags              Tag[] @relation("ServiceProviderTags")
-  userId            String @unique  
-  user              User      @relation(fields: [userId], references: [id]) // Relation to the User model
-  createdAt         DateTime @default(now()) 
+  medicalRecords MedicalRecord[]
+  doctor         Doctor[]
+  clinicInfoId   String? // Optional foreign key for the ClinicInfo
+  clinicInfo     ClinicInfo?     @relation(fields: [clinicInfoId], references: [id]) // Optional relation to ClinicInfo
+  adminPanelId   String?
+  adminPanel     AdminPanel?     @relation(fields: [adminPanelId], references: [id], onDelete: Cascade) // Required relation to AdminPanel
+  tags           Tag[]           @relation("ServiceProviderTags")
+  userId         String          @unique
+  user           User            @relation(fields: [userId], references: [id]) // Relation to the User model
+  createdAt      DateTime        @default(now())
 }
 
-
 model Doctor {
-  id                String   @id @default(cuid())
-  userId            String   @unique
-  user              User     @relation(fields: [userId], references: [id])
-  prescriptions     Prescription[]
-  assistants        DoctorsAssistant[]
-  requests          Request[]
+  id            String             @id @default(cuid())
+  userId        String             @unique
+  user          User               @relation(fields: [userId], references: [id])
+  prescriptions Prescription[]
+  assistants    DoctorsAssistant[]
+  requests      Request[]
 
-  serviceproviderId  String
+  serviceproviderId String
   serviceprovider   ServiceProvider @relation(fields: [serviceproviderId], references: [id])
-  
 }
 
 model DoctorsAssistant {
-  id                String   @id @default(cuid())
-  userId            String   @unique
-  user              User     @relation(fields: [userId], references: [id])
-  assignedDoctorId  String
-  doctor            Doctor   @relation(fields: [assignedDoctorId], references: [id])
+  id                 String              @id @default(cuid())
+  userId             String              @unique
+  user               User                @relation(fields: [userId], references: [id])
+  assignedDoctorId   String
+  doctor             Doctor              @relation(fields: [assignedDoctorId], references: [id])
   requestPermissions RequestPermission[]
 }
 
 model Lab {
-  id                String   @id @default(cuid())
-  userId            String   @unique
-  user              User     @relation(fields: [userId], references: [id])
-  servicesOffered   String[]
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  user            User     @relation(fields: [userId], references: [id])
+  servicesOffered String[]
 }
 
 model Hospital {
-  id                String   @id @default(cuid())
-  userId            String   @unique
-  user              User     @relation(fields: [userId], references: [id])
-  servicesOffered   String[]
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  user            User     @relation(fields: [userId], references: [id])
+  servicesOffered String[]
 }
 
 model Nursing {
-  id                String   @id @default(cuid())
-  userId            String   @unique
-  user              User     @relation(fields: [userId], references: [id])
-  servicesOffered   String[]
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  user            User     @relation(fields: [userId], references: [id])
+  servicesOffered String[]
 }
 
 //
 // Medical Models
 //
 model Allergy {
-  id                String   @id @default(cuid())
-  allergen          String
-  type              String
-  severity          String
-  reaction          String
-  patientId         String
-  patient           Patient  @relation(fields: [patientId], references: [id])
+  id        String  @id @default(cuid())
+  allergen  String
+  type      String
+  severity  String
+  reaction  String
+  patientId String
+  patient   Patient @relation(fields: [patientId], references: [id])
 }
 
 model Medication {
-  id                String   @id @default(cuid())
-  name              String
-  dosage            String
-  frequency         String
-  duration          String
-  status            String
+  id        String @id @default(cuid())
+  name      String
+  dosage    String
+  frequency String
+  duration  String
+  status    String
 
-  prescriptionId    String?
-  prescription      Prescription?  @relation(fields: [prescriptionId], references: [id])
+  prescriptionId String?
+  prescription   Prescription? @relation(fields: [prescriptionId], references: [id])
 }
 
 model LabResult {
-  id                String   @id @default(cuid())
-  testName          String
-  testDate          DateTime
-  result            String
-  referenceRange    String
-  status            String
-  patientId         String
-  patient           Patient  @relation(fields: [patientId], references: [id])
-  serviceProvideId  String
-  serviceProvider   ServiceProvider   @relation(fields: [serviceProvideId], references: [id])
+  id               String          @id @default(cuid())
+  testName         String
+  testDate         DateTime
+  result           String
+  referenceRange   String
+  status           String
+  patientId        String
+  patient          Patient         @relation(fields: [patientId], references: [id])
+  serviceProvideId String
+  serviceProvider  ServiceProvider @relation(fields: [serviceProvideId], references: [id])
 }
 
 model MedicalRecord {
-  id                String   @id @default(cuid())
-  diagnosis         String
-  prescription      String
-  notes             String?
-  userId            String
-  user              User     @relation(fields: [userId], references: [id])
+  id           String  @id @default(cuid())
+  diagnosis    String
+  prescription String
+  notes        String?
+  userId       String
+  user         User    @relation(fields: [userId], references: [id])
 
   description       String?
-  recordId         String?
+  recordId          String?
   attachment        String?
-  serviceProviderId String?  // Add this field
+  serviceProviderId String? // Add this field
   serviceProvider   ServiceProvider? @relation(fields: [serviceProviderId], references: [id]) // Add this relation
 }
 
 model Prescription {
-  id                String   @id @default(cuid())
-  patientId         String
-  doctorId          String
-  medications       Medication[]
-  notes             String?
-  dateIssued        DateTime
-  patient           Patient  @relation(fields: [patientId], references: [id])
-  doctor            Doctor   @relation(fields: [doctorId], references: [id])
+  id          String       @id @default(cuid())
+  patientId   String
+  doctorId    String
+  medications Medication[]
+  notes       String?
+  dateIssued  DateTime
+  patient     Patient      @relation(fields: [patientId], references: [id])
+  doctor      Doctor       @relation(fields: [doctorId], references: [id])
 }
 
 //
 // Appointment and Related Models
 //
 
-
 model TherapyPlan {
-  id                String   @id @default(cuid())
-  planName          String
-  date              DateTime
-  type              String
-  status            String
-  details           String
+  id       String   @id @default(cuid())
+  planName String
+  date     DateTime
+  type     String
+  status   String
+  details  String
 
-  patientId         String
-  patient           Patient  @relation(fields: [patientId], references: [id])
-  serviceProvideId  String
-  serviceProvider   ServiceProvider   @relation(fields: [serviceProvideId], references: [id])
+  patientId        String
+  patient          Patient         @relation(fields: [patientId], references: [id])
+  serviceProvideId String
+  serviceProvider  ServiceProvider @relation(fields: [serviceProvideId], references: [id])
 }
 
 //
 // Payment and Transaction Models
 //
 model Payment {
-  id                String   @id @default(cuid())
-  transactionId     String   @unique
-  amount            Float
-  status            Status
-  paymentMethod     PaymentMethod
-  paymentDate       DateTime @default(now())
-  refundDetails     String?
-  userId            String
-  user              User     @relation(fields: [userId], references: [id])
-  appointmentId String  // Required foreign key for the Appointment
-  appointment  Appointment @relation(fields: [appointmentId], references: [id]) // Required relation to the Appointment model
-  transaction       Transaction[]
+  id            String        @id @default(cuid())
+  transactionId String        @unique
+  amount        Float
+  status        Status
+  paymentMethod PaymentMethod
+  paymentDate   DateTime      @default(now())
+  refundDetails String?
+  userId        String
+  user          User          @relation(fields: [userId], references: [id])
+  appointmentId String // Required foreign key for the Appointment
+  appointment   Appointment   @relation(fields: [appointmentId], references: [id]) // Required relation to the Appointment model
+  transaction   Transaction[]
 }
 
 model Transaction {
-  id                String   @id @default(cuid())
-  gatewayTransactionId String @unique
-  amount            Float
-  status            Status
-  paymentMethod     PaymentMethod
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
-  refundDetails     String?
+  id                   String        @id @default(cuid())
+  gatewayTransactionId String        @unique
+  amount               Float
+  status               Status
+  paymentMethod        PaymentMethod
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime      @updatedAt
+  refundDetails        String?
 
-  paymentId         String   @unique
-  payment           Payment  @relation(fields: [paymentId], references: [id])
+  paymentId String  @unique
+  payment   Payment @relation(fields: [paymentId], references: [id])
 }
 
 //
 // Feedback and Review Models
 //
 model Rating {
-  id                String   @id @default(cuid()) 
-  userId            String
+  id                  String          @id @default(cuid())
+  userId              String
   serviceProviderType ProviderType
-  serviceProviderId String   
-  serviceProvider   ServiceProvider @relation(fields: [serviceProviderId], references: [id])
-  user              User     @relation(fields: [userId], references: [id])
-  score             Float    
-  comment           String?  
-  createdAt         DateTime @default(now()) 
-  updatedAt         DateTime @updatedAt 
+  serviceProviderId   String
+  serviceProvider     ServiceProvider @relation(fields: [serviceProviderId], references: [id])
+  user                User            @relation(fields: [userId], references: [id])
+  score               Float
+  comment             String?
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt
 }
 
 //
 // Permission, Request, Access Models
 //
 model RequestPermission {
-  id                String   @id @default(cuid())
-  name              String
-  description       String?
-  accessType        PermissionType
-  requests          Request[]
+  id                 String            @id @default(cuid())
+  name               String
+  description        String?
+  accessType         PermissionType
+  requests           Request[]
   doctorsAssistantId String?
   doctorsAssistant   DoctorsAssistant? @relation(fields: [doctorsAssistantId], references: [id])
 }
 
 model Request {
-  id                String   @id @default(cuid())
+  id                 String              @id @default(cuid())
   requestPermissions RequestPermission[]
-  status            Status
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
-  doctorId          String?
-  doctor            Doctor?  @relation(fields: [doctorId], references: [id])
+  status             Status
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  doctorId           String?
+  doctor             Doctor?             @relation(fields: [doctorId], references: [id])
 }
 
 // Appointment Schedule and Slot creating -------------------------------------
 
 model Appointment {
-  id                String   @id @default(cuid()) 
-  service           Service[] 
-  status            Status 
-  appointmentTime   DateTime 
-  bookedAt          DateTime @default(now()) 
-  reason            String? 
+  id              String    @id @default(cuid())
+  service         Service[]
+  status          Status
+  appointmentTime DateTime
+  bookedAt        DateTime  @default(now())
+  reason          String?
 
   // Booking for Others
-  isForOthers       Boolean  @default(false) 
-  othersAppointment OthersAppointment? 
+  isForOthers       Boolean            @default(false)
+  othersAppointment OthersAppointment?
 
   currentLocation   CurrentLocation?
-  slotId            String @unique 
-  slot              Slot     @relation(fields: [slotId], references: [id]) 
-  userId            String 
-  user              User   @relation(fields: [userId], references: [id]) 
-  serviceProviderId String 
-  serviceProvider   ServiceProvider @relation(fields: [serviceProviderId], references: [id]) 
-  patientId         String 
-  patient          Patient @relation(fields: [patientId], references: [id]) 
-  payment         Payment[] 
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
-  
+  slotId            String           @unique
+  slot              Slot             @relation(fields: [slotId], references: [id])
+  userId            String
+  user              User             @relation(fields: [userId], references: [id])
+  serviceProviderId String
+  serviceProvider   ServiceProvider  @relation(fields: [serviceProviderId], references: [id])
+  patientId         String
+  patient           Patient          @relation(fields: [patientId], references: [id])
+  payment           Payment[]
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
 
-  tags              Tag[] @relation("AppointmentTags")
+  tags Tag[] @relation("AppointmentTags")
 }
 
 model OthersAppointment {
-  id                String   @id @default(cuid()) 
-  name              String  
-  contact           String   
-  email             String?  
-  relationship      String   
-  age               Int     
-  gender            Gender 
-  reason            String?  
+  id           String  @id @default(cuid())
+  name         String
+  contact      String
+  email        String?
+  relationship String
+  age          Int
+  gender       Gender
+  reason       String?
 
   // Relations
-  appointmentId     String  @unique 
-  appointment       Appointment @relation(fields: [appointmentId], references: [id]) 
+  appointmentId String      @unique
+  appointment   Appointment @relation(fields: [appointmentId], references: [id])
 
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt 
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Schedule {
-  id                String   @id @default(cuid()) 
-  date              DateTime? 
-  dayOfWeek         WeekDay?  
-  isRecurring       Boolean  @default(false) 
-  recurrenceType    RecurrenceType?  
-  startTime         DateTime 
-  endTime           DateTime 
-  slotDuration      Int      
-  location          String    
-  isAvailable       Boolean  @default(true) 
-  service           Service  
-  status            Status @default(PENDING)
+  id                String          @id @default(cuid())
+  date              DateTime?
+  dayOfWeek         WeekDay?
+  isRecurring       Boolean         @default(false)
+  recurrenceType    RecurrenceType?
+  startTime         DateTime
+  endTime           DateTime
+  slotDuration      Int
+  location          String
+  isAvailable       Boolean         @default(true)
+  service           Service
+  status            Status          @default(PENDING)
   // Relations
   serviceProviderId String
-  serviceProviders   ServiceProvider @relation(fields: [serviceProviderId], references: [id]) 
-  slots             Slot[] 
+  serviceProviders  ServiceProvider @relation(fields: [serviceProviderId], references: [id])
+  slots             Slot[]
   clinicInfo        ClinicInfo[]
   userId            String
 
-
-
-  createdAt         DateTime @default(now()) 
-  updatedAt         DateTime @updatedAt 
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Slot {
-  id                String   @id @default(cuid()) 
-  slotDate          DateTime? 
-  startTime         DateTime 
-  endTime           DateTime 
-  isBooked          Boolean  @default(false)
-  scheduleId        String  
-  schedule          Schedule @relation(fields: [scheduleId], references: [id]) 
-  appointment       Appointment? 
-  bookedAt         DateTime? @default(now()) 
-  updatedAt         DateTime @updatedAt 
+  id          String       @id @default(cuid())
+  slotDate    DateTime?
+  startTime   DateTime
+  endTime     DateTime
+  isBooked    Boolean      @default(false)
+  scheduleId  String
+  schedule    Schedule     @relation(fields: [scheduleId], references: [id])
+  appointment Appointment?
+  bookedAt    DateTime?    @default(now())
+  updatedAt   DateTime     @updatedAt
 }
 
 model ClinicInfo {
-  id          String   @id @default(cuid()) 
-  clinicName  String   
-  addressId         String @unique 
-  address           Address  @relation(fields: [addressId], references: [id]) 
-  phone     String   
-  images      String[] 
+  id         String   @id @default(cuid())
+  clinicName String
+  addressId  String   @unique
+  address    Address  @relation(fields: [addressId], references: [id])
+  phone      String
+  images     String[]
 
   // Relations   
-  serviceProviders ServiceProvider[] 
+  serviceProviders ServiceProvider[]
   scheduleId       String?
-  schedule         Schedule? @relation(fields: [scheduleId], references: [id])
-  createdAt   DateTime @default(now()) 
-  updatedAt   DateTime @updatedAt 
+  schedule         Schedule?         @relation(fields: [scheduleId], references: [id])
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
 }
 
 model Address {
-  id        String @id @default(cuid())
-  address   String?
-  city      String?
-  state     String?
-  country   String?
-  pincode   String?
-  userId    String? @unique
-  user      User?   @relation(fields: [userId], references: [id])
+  id      String  @id @default(cuid())
+  address String?
+  city    String?
+  state   String?
+  country String?
+  pincode String?
+  userId  String? @unique
+  user    User?   @relation(fields: [userId], references: [id])
 
-  clinicInfo  ClinicInfo? 
-  
-  
+  clinicInfo ClinicInfo?
 }
 
-
-
 model Education {
-  id          String   @id @default(cuid()) 
-  university  String   
-  degree      String  
-  duration    String   // Duration of the education (e.g., "2015-2019")
-  serviceProviderId String 
-  serviceProvider   ServiceProvider @relation(fields: [serviceProviderId], references: [id]) 
+  id                String          @id @default(cuid())
+  university        String
+  degree            String
+  duration          String // Duration of the education (e.g., "2015-2019")
+  serviceProviderId String
+  serviceProvider   ServiceProvider @relation(fields: [serviceProviderId], references: [id])
 }
 
 model WorkExperience {
-  id          String   @id @default(cuid()) // Unique identifier for the work experience record
-  clinic      String   // Name of the clinic or organization
-  duration    String   // Duration of the work experience (e.g., "2 years")
+  id                String          @id @default(cuid()) // Unique identifier for the work experience record
+  clinic            String // Name of the clinic or organization
+  duration          String // Duration of the work experience (e.g., "2 years")
   serviceProviderId String // ID of the service provider (e.g., doctor, hospital)
   serviceProvider   ServiceProvider @relation(fields: [serviceProviderId], references: [id]) // Relation to the ServiceProvider model
 }
 
 model Award {
-  id          String   @id @default(cuid()) 
-  date        String   
-  title       String  
-  description String 
-  serviceProviderId String 
-  serviceProvider   ServiceProvider @relation(fields: [serviceProviderId], references: [id]) 
+  id                String          @id @default(cuid())
+  date              String
+  title             String
+  description       String
+  serviceProviderId String
+  serviceProvider   ServiceProvider @relation(fields: [serviceProviderId], references: [id])
 }
 
 model CurrentLocation {
-  id          String   @id @default(cuid())
-  lat         Float    
-  long        Float    
+  id   String @id @default(cuid())
+  lat  Float
+  long Float
 
   // Relations
-  appointmentId String? @unique
-  appointment Appointment? @relation(fields: [appointmentId], references: [id]) 
-  
+  appointmentId String?      @unique
+  appointment   Appointment? @relation(fields: [appointmentId], references: [id])
 }
 
 model AuditLog {
-  id          String   @id @default(cuid())
-  entity      String  
-  entityId    String   
-  actionType ActionType 
-  status      Status 
-  ipAddress   String?  
-  device      String?   
-  performedBy String   
-  timestamp   DateTime @default(now())
+  id          String     @id @default(cuid())
+  entity      String
+  entityId    String
+  actionType  ActionType
+  status      Status
+  ipAddress   String?
+  device      String?
+  performedBy String
+  timestamp   DateTime   @default(now())
 
-  userId      String
-  user        User     @relation(fields: [userId], references: [id])
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
 }
 
 model Notification {
-  id          String   @id @default(cuid()) 
-  userId      String  
-  user        User     @relation(fields: [userId], references: [id]) 
-  message     String   
-  type        String   // Type of notification (e.g., "Reminder", "Payment", "System")
-  priority    String   @default("NORMAL") // Priority of the notification (e.g., "LOW", "NORMAL", "HIGH")
-  isRead      Boolean  @default(false) 
+  id          String    @id @default(cuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id])
+  message     String
+  type        String // Type of notification (e.g., "Reminder", "Payment", "System")
+  priority    String    @default("NORMAL") // Priority of the notification (e.g., "LOW", "NORMAL", "HIGH")
+  isRead      Boolean   @default(false)
   expiresAt   DateTime?
-  isRecurring Boolean  @default(false)
-  groupId     String?  
-  createdAt   DateTime @default(now()) 
+  isRecurring Boolean   @default(false)
+  groupId     String?
+  createdAt   DateTime  @default(now())
 
-  
   relatedEntityId String?
-  relatedEntity   String? 
+  relatedEntity   String?
 }
-
-
 
 model Tag {
   id          String   @id @default(cuid()) // Unique identifier for the tag
   name        String   @unique // Name of the tag (must be unique)
-  description String?  // Optional description of the tag
+  description String? // Optional description of the tag
   createdAt   DateTime @default(now()) // Timestamp for when the tag was created
   updatedAt   DateTime @updatedAt // Timestamp for when the tag was last updated
 
@@ -700,7 +677,5 @@ model Tag {
 //   createdAt   DateTime @default(now()) // Timestamp for when the tenant was created
 //   updatedAt   DateTime @updatedAt // Timestamp for when the tenant was last updated
 
-
 //   users       User[] // Relation to User model for users belonging to this tenant
 // }
-

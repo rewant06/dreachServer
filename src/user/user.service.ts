@@ -33,7 +33,7 @@ export class UserService {
     private readonly prisma: PrismaService,
     private readonly utils: UtilsService,
     private readonly storageService: StorageService,
-  ) {}
+  ) { }
 
   private async isUsernameTaken(username: string): Promise<boolean> {
     const user = await this.prisma.user.findUnique({
@@ -60,14 +60,14 @@ export class UserService {
           },
         },
       });
-  
+
       // If the user already exists, return the existing user
       if (existingUser) return existingUser;
-  
+
       // Generate a unique userId
       let userId = `PT-${this.utils.generateRandomString(5)}`;
       let isUserIdUnique = false;
-  
+
       while (!isUserIdUnique) {
         const existingUserId = await this.prisma.user.findUnique({
           where: { userId },
@@ -78,12 +78,12 @@ export class UserService {
           userId = `PT-${this.utils.generateRandomString(5)}`; // Regenerate userId
         }
       }
-  
+
       // Generate a base username from the email
       const baseUsername = email.split('@')[0];
       let username = baseUsername + this.utils.generateRandomString(3);
       let isUsernameUnique = false;
-  
+
       while (!isUsernameUnique) {
         const existingUsername = await this.prisma.user.findUnique({
           where: { username },
@@ -94,7 +94,7 @@ export class UserService {
           username = baseUsername + this.utils.generateRandomString(3); // Regenerate username
         }
       }
-  
+
       // Create the new user
       const newUser = await this.prisma.user.create({
         data: {
@@ -104,7 +104,7 @@ export class UserService {
           username: username, // Use the unique username
         },
       });
-  
+
       // Return the newly created user
       return newUser;
     } catch (error) {
@@ -122,61 +122,77 @@ export class UserService {
     try {
       // First check if the user exists
       const user = await this.prisma.user.findUnique({
-        where: { userId },
-        include: {
-          serviceProvider: true,
-          address: true,
-        },
+        where: { userId }
+        // include: {
+        //   serviceProvider: true,
+        //   address: true,
+        // },
       });
 
       if (!user) {
         throw new NotFoundException(`User with ID ${userId} not found`);
       }
+      console.log("THE UESR IS ", user)
 
       // Start a transaction to delete related records
-      await this.prisma.$transaction(async (prisma) => {
-        // Delete user profile if exists
-        if (user.userId) {
-          try {
-            await prisma.user.delete({
-              where: { id: user.userId }, // Use user ID
-            });
-          } catch (error) {
-            console.log('User deleted successfully');
-            // Continue with other deletions even if service provider deletion fails
-          }
+      // await this.prisma.$transaction(async () => {
+      //   // Delete user profile if exists
+      //   if (user.userId) {
+      //     try {
+      //       await this.prisma.user.update({
+      //         where: { id: userId }, // Use user ID
+      //         data: {
+      //           isDeleted: true,
+      //           isActive: false,
+      //           isVerified: false,
+      //         }
+      //       });
+      //     } catch (error) {
+      //       console.log('User deleted successfully');
+      //       // Continue with other deletions even if service provider deletion fails
+      //     }
+      //   }
+
+      // Delete address if exists
+      // if (user.address) {
+      //   try {
+      //     await prisma.address.delete({
+      //       where: { id: user.address.id }, // Use address ID instead of user ID
+      //     });
+      //   } catch (error) {
+      //     console.log('Address deletion successful');
+      //     // Continue with other deletions even if address deletion fails
+      //   }
+      // }
+
+      // Delete the user's appointments
+      // await prisma.appointment.deleteMany({
+      //   where: { userId: user.id },
+      // });
+
+      // Delete the user's reviews/ratings
+      // await prisma.rating.deleteMany({
+      //   where: { userId: user.id },
+      // });
+
+      // Finally delete the user
+      // await prisma.user.delete({
+      //   where: { userId },
+      // });
+      // });
+
+      // userId
+      await this.prisma.user.update({
+        where: { id: user.id },
+        data: {
+          isDeleted: true,
+          isActive: false,
+          isVerified: false
         }
-
-        // Delete address if exists
-        if (user.address) {
-          try {
-            await prisma.address.delete({
-              where: { id: user.address.id }, // Use address ID instead of user ID
-            });
-          } catch (error) {
-            console.log('Address deletion successful');
-            // Continue with other deletions even if address deletion fails
-          }
-        }
-
-        // Delete the user's appointments
-        await prisma.appointment.deleteMany({
-          where: { userId: user.id },
-        });
-
-        // Delete the user's reviews/ratings
-        await prisma.rating.deleteMany({
-          where: { userId: user.id },
-        });
-
-        // Finally delete the user
-        await prisma.user.delete({
-          where: { userId },
-        });
       });
 
       return {
-        message: `User ${userId} and all associated data have been deleted successfully`,
+        message: `User ${userId} and all associated data has been compromised, user can't login`,
       };
     } catch (error) {
       if (error instanceof NotFoundException) {
@@ -319,7 +335,7 @@ export class UserService {
           prefix = 'LAB';
           break;
         default:
-          prefix = 'RI'; 
+          prefix = 'RI';
       }
 
       const providerId = `${prefix}-${Math.random().toString(36).substring(2, 9).toUpperCase()}`;
