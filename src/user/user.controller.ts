@@ -18,7 +18,7 @@ import {
   ApplyForServiceProviderDto,
 } from './dto/user.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { Service, ProviderType } from '@prisma/client';
+import { Service, ProviderType, Prisma } from '@prisma/client';
 import { memoryStorage } from 'multer';
 
 const fileFilter = (req, file, callback) => {
@@ -41,17 +41,11 @@ export class UserController {
     return await this.userService.createUser(email);
   }
 
-  // @Post('updateUser')
-  // @UseInterceptors(FileInterceptor('profilePic', { fileFilter }))
-  // async updateUsersProfile(
-  //   @UploadedFile() file: Express.Multer.File,
-  //   @Body() dto: UpdatePatientsDetailsDto,
-  // ) {
-  //   const { address, ...res } = dto;
-  //   console.log(file, address, res);
-
-  //   return this.userService.updateUsersProfile({ address, ...res }, file);
-  // }
+  @Post('login')
+  async login(@Body('email') email: string) {
+    console.log('Received email in controller:', email); // Debug log
+    return await this.userService.login(email);
+  }
 
   @Post('updateUser')
   @UseInterceptors(FileInterceptor('profilePic', { storage: memoryStorage() }))
