@@ -33,7 +33,7 @@ export class UserService {
     private readonly prisma: PrismaService,
     private readonly utils: UtilsService,
     private readonly storageService: StorageService,
-  ) { }
+  ) {}
 
   private async isUsernameTaken(username: string): Promise<boolean> {
     const user = await this.prisma.user.findUnique({
@@ -113,6 +113,26 @@ export class UserService {
     }
   }
 
+  async login(email: string) {
+    try {
+      // Check if a user with the given email exists
+      const user = await this.prisma.user.findUnique({
+        where: { email },
+        include: {
+          serviceProvider: true,
+        },
+      });
+
+      if (!user) {
+        throw new NotFoundException('User not found');
+      }
+
+      return user;
+    } catch (error) {
+      console.error('Error during login:', error);
+      throw new InternalServerErrorException('Login failed');
+    }
+  }
   async generateMediaId() {
     return await this.storageService.generateMediaId();
   }
@@ -122,7 +142,7 @@ export class UserService {
     try {
       // First check if the user exists
       const user = await this.prisma.user.findUnique({
-        where: { userId }
+        where: { userId },
         // include: {
         //   serviceProvider: true,
         //   address: true,
@@ -132,7 +152,7 @@ export class UserService {
       if (!user) {
         throw new NotFoundException(`User with ID ${userId} not found`);
       }
-      console.log("THE UESR IS ", user)
+      console.log('THE UESR IS ', user);
 
       // Start a transaction to delete related records
       // await this.prisma.$transaction(async () => {
@@ -187,8 +207,8 @@ export class UserService {
         data: {
           isDeleted: true,
           isActive: false,
-          isVerified: false
-        }
+          isVerified: false,
+        },
       });
 
       return {
@@ -404,7 +424,7 @@ export class UserService {
       console.log('Received userId:', users.userId); // Debug log
 
       const { name, dob, gender, bloodGroup, address, phone } = users;
-  
+
       // Check if the user exists
       const user = await this.prisma.user.findUnique({
         where: {
@@ -434,82 +454,79 @@ export class UserService {
       }
 
       // Handle profile picture upload
-    let profilePic = user.profilePic;
-    if (file) {
-     
-      console.log('Uploaded file details:', {
-        originalname: file.originalname,
-        mimetype: file.mimetype,
-        size: file.size,
-      });
-
-     
-      if (file.size > 5 * 1024 * 1024) {
-        
-        console.error('File size exceeds the 5MB limit:', file.size);
-        throw new BadRequestException('File size exceeds the 5MB limit');
-      }
-
-      if (!['image/jpeg', 'image/png'].includes(file.mimetype)) {
-        console.error('Unsupported file type:', file.mimetype);
-        throw new BadRequestException('Unsupported file type');
-      }
-
-      if (profilePic) {
-        console.log(`Deleting existing profile picture: ${profilePic}`);
-        try {
-          await this.storageService.delete('userProfile/' + profilePic);
-        } catch (deleteError) {
-          console.error('Error deleting existing profile picture:', deleteError);
-          throw new InternalServerErrorException(
-            'Failed to delete existing profile picture',
-          );
-        }
-      }
-
-      
-      // Save the file to a temporary directory
-      const fs = require('fs');
-      const tempFilePath = `./uploads/temp-${Date.now()}-${file.originalname}`;
-      fs.writeFileSync(tempFilePath, file.buffer);
-      const mediaId = await this.generateMediaId();
-
-      try {
-        // Process the image using Sharp
-        console.log('Processing image with Sharp...');
-        const filebuffer = await sharp(tempFilePath)
-          .webp({ quality: 80 })
-          .toBuffer();
-
-  
-        const mediaId = await this.generateMediaId();
-        profilePic = `${mediaId}.webp`;
-
-        // Upload the processed image to S3
-        console.log(`Uploading new profile picture: ${profilePic}`);
-        await this.storageService.save(
-          'userProfile/' + profilePic,
-          'image/webp',
-          filebuffer,
-          [{ mediaId }],
-        );
-
-              // Delete the temporary file
-              fs.unlinkSync(tempFilePath);
-
-      } catch (sharpError) {
-        console.error('Error processing image with Sharp:', sharpError);
-
-        // Log additional details about the file for debugging
-        console.error('File details during Sharp processing:', {
+      let profilePic = user.profilePic;
+      if (file) {
+        console.log('Uploaded file details:', {
           originalname: file.originalname,
           mimetype: file.mimetype,
           size: file.size,
         });
 
-        throw new InternalServerErrorException('Failed to process image');
+        if (file.size > 5 * 1024 * 1024) {
+          console.error('File size exceeds the 5MB limit:', file.size);
+          throw new BadRequestException('File size exceeds the 5MB limit');
+        }
+
+        if (!['image/jpeg', 'image/png'].includes(file.mimetype)) {
+          console.error('Unsupported file type:', file.mimetype);
+          throw new BadRequestException('Unsupported file type');
+        }
+
+        if (profilePic) {
+          console.log(`Deleting existing profile picture: ${profilePic}`);
+          try {
+            await this.storageService.delete('userProfile/' + profilePic);
+          } catch (deleteError) {
+            console.error(
+              'Error deleting existing profile picture:',
+              deleteError,
+            );
+            throw new InternalServerErrorException(
+              'Failed to delete existing profile picture',
+            );
+          }
+        }
+
+        // Save the file to a temporary directory
+        const fs = require('fs');
+        const tempFilePath = `./uploads/temp-${Date.now()}-${file.originalname}`;
+        fs.writeFileSync(tempFilePath, file.buffer);
+        const mediaId = await this.generateMediaId();
+
+        try {
+          // Process the image using Sharp
+          console.log('Processing image with Sharp...');
+          const filebuffer = await sharp(tempFilePath)
+            .webp({ quality: 80 })
+            .toBuffer();
+
+          const mediaId = await this.generateMediaId();
+          profilePic = `${mediaId}.webp`;
+
+          // Upload the processed image to S3
+          console.log(`Uploading new profile picture: ${profilePic}`);
+          await this.storageService.save(
+            'userProfile/' + profilePic,
+            'image/webp',
+            filebuffer,
+            [{ mediaId }],
+          );
+
+          // Delete the temporary file
+          fs.unlinkSync(tempFilePath);
+        } catch (sharpError) {
+          console.error('Error processing image with Sharp:', sharpError);
+
+          // Log additional details about the file for debugging
+          console.error('File details during Sharp processing:', {
+            originalname: file.originalname,
+            mimetype: file.mimetype,
+            size: file.size,
+          });
+
+          throw new InternalServerErrorException('Failed to process image');
+        }
       }
-    }
 
       // Check if an address exists for the user
       if (address) {
@@ -1345,8 +1362,6 @@ export class UserService {
     }
   }
 
-  ////////////////////////////////////////////////////////////////////////////////////////////
-
   async patientDashboardDetails(patientId: string) {
     try {
       // Validate input
@@ -1491,6 +1506,4 @@ export class UserService {
       throw new InternalServerErrorException('Internal Server Error');
     }
   }
-
-  ////////////////////////////////////////////////////////////////////////////////////////////////
 }
