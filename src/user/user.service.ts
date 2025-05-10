@@ -647,18 +647,7 @@ export class UserService {
           userId: true,
           username: true,
           profilePic: true,
-          serviceProvider: {
-            select: {
-              id: true,
-              userId: true,
-              specialization: true,
-              fee: true,
-              experience: true,
-              description: true,
-              providerType: true,
-              status: true,
-            },
-          },
+          phone: true,
         },
       });
 

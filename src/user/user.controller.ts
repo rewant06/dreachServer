@@ -21,15 +21,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { Service, ProviderType } from '@prisma/client';
 import { memoryStorage } from 'multer';
 
-const fileFilter = (req, file, callback) => {
-  if (!file.mimetype.match(/\/(jpg|jpeg|png|webp)$/)) {
-    return callback(
-      new BadRequestException('Only image files are allowed!'),
-      false,
-    );
-  }
-  callback(null, true);
-};
+
 
 @Controller('user')
 export class UserController {
@@ -40,6 +32,22 @@ export class UserController {
     console.log('Received email in controller:', email); // Debug log
     return await this.userService.createUser(email);
   }
+
+  @Post('login')
+  async login(@Body('email') email: string) {
+    console.log('Received email in controller:', email); // Debug log
+    return await this.userService.login(email);
+  }
+
+  // const fileFilter = (req, file, callback) => {
+  //   if (!file.mimetype.match(/\/(jpg|jpeg|png|webp)$/)) {
+  //     return callback(
+  //       new BadRequestException('Only image files are allowed!'),
+  //       false,
+  //     );
+  //   }
+  //   callback(null, true);
+  // };
 
   // @Post('updateUser')
   // @UseInterceptors(FileInterceptor('profilePic', { fileFilter }))
@@ -67,6 +75,8 @@ export class UserController {
 
     return this.userService.updateUsersProfile({  address: parsedAddress, ...res }, file);
   }
+
+
 
   @Put('/delete/:userId')
   async deleteUser(@Param('userId') userId: string) {

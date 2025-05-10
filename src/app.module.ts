@@ -20,7 +20,7 @@ import { AdminService } from './admin/admin.service';
 
 
 @Module({
-  imports: [PrismaModule, AuthModule, ServiceProvidersModule , ServiceProvidersModule, UserModule,ConfigModule.forRoot(), UtilsModule, MulterModule.register({
+  imports: [PrismaModule, AuthModule , ServiceProvidersModule, UserModule,ConfigModule.forRoot(), UtilsModule, MulterModule.register({
     dest: './uploads', // Set your upload directory
   }), AdminModule],
 

@@ -4,7 +4,7 @@ import { LoginDTO } from './dto/auth.dto';
 import { compare } from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { response } from 'express';
-
+ 
 const expiresIn = 60 * 60 * 1000 * 24;
 
 @Injectable()
