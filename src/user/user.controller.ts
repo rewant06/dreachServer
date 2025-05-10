@@ -18,7 +18,7 @@ import {
   ApplyForServiceProviderDto,
 } from './dto/user.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { Service, ProviderType } from '@prisma/client';
+import { Service, ProviderType, Prisma } from '@prisma/client';
 import { memoryStorage } from 'multer';
 
 
@@ -38,6 +38,7 @@ export class UserController {
     console.log('Received email in controller:', email); // Debug log
     return await this.userService.login(email);
   }
+
 
   // const fileFilter = (req, file, callback) => {
   //   if (!file.mimetype.match(/\/(jpg|jpeg|png|webp)$/)) {
