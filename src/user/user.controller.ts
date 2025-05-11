@@ -77,11 +77,14 @@ export class UserController {
     return this.userService.updateUsersProfile({  address: parsedAddress, ...res }, file);
   }
 
-
-
   @Put('/delete/:userId')
   async deleteUser(@Param('userId') userId: string) {
     return this.userService.deleteUser(userId);
+  }
+
+  @Delete('/terminate/:userId')
+  async terminateUser(@Param('userId') userId: string) {
+    return this.userService.terminateUser(userId);
   }
 
   @Post('applyForServiceProvider')
