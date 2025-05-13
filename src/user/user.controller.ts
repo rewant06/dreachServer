@@ -29,13 +29,13 @@ export class UserController {
 
   @Post('signup')
   async signup(@Body('email') email: string) {
-    console.log('Received email in controller:', email); // Debug log
+    console.log('Received email in controller for signup:', email); // Debug log
     return await this.userService.createUser(email);
   }
 
   @Post('login')
   async login(@Body('email') email: string) {
-    console.log('Received email in controller:', email); // Debug log
+    console.log('Received email in controller for login:', email); // Debug log
     return await this.userService.login(email);
   }
 
