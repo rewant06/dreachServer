@@ -1,11 +1,9 @@
-// filepath: c:\Users\rewan\Desktop\HelpingBots\DreachServer\server\src\auth\auth.controller.ts
 import {
   Controller,
   Get,
   Req,
   UseGuards,
   Res,
-  HttpStatus,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { AuthService } from './auth.service';
@@ -20,49 +18,49 @@ export class AuthController {
 
   @Get('google')
   @UseGuards(AuthGuard('google'))
-  async googleAuth() {
-    // Initiates Google OAuth2 login
-  }
+  async googleAuth() {}
 
   @Get('google/callback')
   @UseGuards(AuthGuard('google'))
   async googleAuthRedirect(@Req() req, @Res() res) {
     const user = req.user;
+    const existingUser = await this.userService.createUser(user.email);
 
-    // Check if user exists in the database
-    let existingUser = await this.userService.createUser(user.email);
-    if (!existingUser) {
-      // Create a new user if not found
-      existingUser = await this.userService.createUser(user.email);
-      await this.userService.updateUsersProfile(
-        {
-          userId: existingUser.userId,
-          name: `${user.firstName} ${user.lastName}`,
-          isVerified: true,
-        },
-        undefined,
-      );
+    
+
+    // Fetch full user info (including isVerified, role, etc.)
+    const fullUser = await this.userService.getUserById(existingUser.userId);
+    
+    if (!fullUser) {
+      return res.redirect(`${process.env.FRONTEND_URL}/error?message=User not found`);
     }
 
-    // Store user session
-    req.session.user = existingUser;
+    // Generate JWT
+    const jwt = await this.authService.generateJwt(fullUser);
 
-    // Redirect to role-based dashboard
-    if (existingUser.role === 'Doctor') {
-      return res.redirect(`${process.env.FRONTEND_URL}/dashboard/doctor`);
-    } else if (existingUser.role === 'DoctorsAssistant') {
-      return res.redirect(`${process.env.FRONTEND_URL}/dashboard/assistant`);
-    }
-    else if (existingUser.role === 'Lab') {
-      return res.redirect(`${process.env.FRONTEND_URL}/dashboard/lab`);
+    // Set JWT as HTTP-only cookie
+    res.cookie('dreach_token', jwt, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    });
+
+    // Redirect based on isVerified and role
+    if (!fullUser.isVerified) {
+      return res.redirect(`${process.env.FRONTEND_URL}/auth/complete-profile?userId=${fullUser.userId}`);
     }
 
-    else if (existingUser.role === 'Hospital') {
-      return res.redirect(`${process.env.FRONTEND_URL}/dashboard/hospital`);
-    }
-
-    else {
-      return res.redirect(`${process.env.FRONTEND_URL}/dashboard/patient`);
+    switch (fullUser.role) {
+      case 'Doctor':
+        return res.redirect(`${process.env.FRONTEND_URL}/dashboard/doctor/${fullUser.userId}`);
+      case 'Lab':
+        return res.redirect(`${process.env.FRONTEND_URL}/dashboard/lab/${fullUser.userId}`);
+      case 'Hospital':
+        return res.redirect(`${process.env.FRONTEND_URL}/dashboard/hospital/${fullUser.userId}`);
+      // Add more roles as needed
+      default:
+        return res.redirect(`${process.env.FRONTEND_URL}/dashboard/patient/${fullUser.userId}`);
     }
   }
 }

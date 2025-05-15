@@ -142,7 +142,7 @@ model User {
   username      String?     @unique
   name          String?
   email         String      @unique
-  emailVerified DateTime?
+  emailVerified Boolean?    @default(false)
   phone         String?
   role          UserRole
   gender        Gender?
@@ -155,6 +155,7 @@ model User {
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
   isDeleted     Boolean     @default(false)
+  
 
   // NextAuth relations
   accounts      Account[]
